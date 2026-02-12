@@ -393,13 +393,78 @@
         .hidden { display: none !important; }
 
         @media print {
-            body { background: white; padding: 0; }
-            .header, .card:not(#reportCard), .tabs, .btn, .controls, .no-print { 
+            body { 
+                background: white !important; 
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            /* إخفاء كل شيء */
+            .container > * {
+                display: none !important;
+            }
+            
+            /* إخفاء العناصر غير المطلوبة */
+            .header, 
+            .tabs, 
+            .btn, 
+            .controls, 
+            .no-print,
+            #uploadCard,
+            #dashboardCard,
+            #comparisonCard,
+            #controlsCard,
+            #mainCard { 
                 display: none !important; 
             }
-            .tab-content { display: block !important; }
-            .report-section { page-break-inside: avoid; }
-            #reportCard { box-shadow: none; }
+            
+            /* إظهار التقرير فقط */
+            #tab1 {
+                display: block !important;
+            }
+            
+            #reportCard {
+                display: block !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 20px !important;
+                background: white !important;
+            }
+            
+            #reportContent {
+                display: block !important;
+            }
+            
+            .report-section { 
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+                display: block !important;
+            }
+            
+            .chart-container {
+                page-break-inside: avoid;
+                margin: 20px 0;
+                display: block !important;
+            }
+            
+            canvas {
+                max-height: 400px !important;
+            }
+            
+            /* التأكد من ظهور كل عناصر التقرير */
+            .report-header,
+            .report-stats,
+            .strengths-box,
+            .weaknesses-box,
+            .recommendations-box,
+            .report-stat {
+                display: block !important;
+                visibility: visible !important;
+            }
+            
+            .report-stats {
+                display: grid !important;
+            }
         }
 
         @media (max-width: 768px) {
