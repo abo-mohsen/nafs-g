@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام تحليل نافس - النسخة النهائية</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4472C4 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #4472C4 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .targets-section {
+            background: #f0f4ff;
+            border: 2px solid #4472C4;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .targets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .target-input {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .target-input h4 {
+            color: #4472C4;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .target-input label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .target-input input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+
+        .upload-area {
+            border: 3px dashed #4472C4;
+            border-radius: 12px;
+            padding: 50px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(68, 114, 196, 0.05);
+        }
+
+        .upload-area:hover {
+            background: rgba(68, 114, 196, 0.15);
+            transform: scale(1.02);
+        }
+
+        .upload-icon { font-size: 5em; margin-bottom: 20px; }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .stat-card.improved {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .stat-card.declined {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .stat-card.neutral {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        }
+
+        .stat-card h3 { font-size: 2.5em; margin-bottom: 5px; }
+        .stat-card p { font-size: 1.1em; margin-bottom: 5px; }
+        .stat-card .comparison {
+            font-size: 0.85em;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .stat-card .trend {
+            font-size: 0.9em;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #4472C4 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #4472C4 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(68, 114, 196, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 30px 0;
+            padding: 25px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #4472C4 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .report-section {
+            page-break-inside: avoid;
+            margin-bottom: 30px;
+        }
+
+        .report-header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #4472C4 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .report-stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .strengths-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .strengths-box h3 {
+            color: #155724;
+            margin-bottom: 15px;
+        }
+
+        .strengths-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .strengths-box li {
+            padding: 10px 0;
+            border-bottom: 1px solid #c3e6cb;
+        }
+
+        .strengths-box li:before {
+            content: "✅ ";
+            margin-left: 10px;
+        }
+
+        .weaknesses-box {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .weaknesses-box h3 {
+            color: #721c24;
+            margin-bottom: 15px;
+        }
+
+        .weaknesses-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .weaknesses-box li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f5c6cb;
+        }
+
+        .weaknesses-box li:before {
+            content: "⚠️ ";
+            margin-left: 10px;
+        }
+
+        .recommendations-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .recommendations-box h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .recommendations-box ol {
+            padding-right: 20px;
+        }
+
+        .recommendations-box li {
+            padding: 10px 0;
+            border-bottom: 1px solid #ffeaa7;
+        }
+
+        .alert {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+
+        .alert-info { background: #d1ecf1; border: 2px solid #bee5eb; color: #0c5460; }
+        .alert-success { background: #d4edda; border: 2px solid #c3e6cb; color: #155724; }
+        .alert-warning { background: #fff3cd; border: 2px solid #ffc107; color: #856404; }
+
+        .spinner {
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid #4472C4;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+            display: none;
+        }
+
+        .spinner.show { display: block; }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden { display: none !important; }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+            
+            body * {
+                visibility: hidden;
+            }
+            
+            #printableReport,
+            #printableReport * {
+                visibility: visible !important;
+            }
+            
+            #printableReport {
+                position: absolute;
+                left: 0;
+                top: 0;
+                display: block !important;
+                width: 100%;
+            }
+            
+            /* التأكد من ظهور الرسومات */
+            #printableReport canvas {
+                display: block !important;
+                visibility: visible !important;
+                max-width: 100% !important;
+                height: auto !important;
+            }
+            
+            #printableReport .chart-container {
+                display: block !important;
+                visibility: visible !important;
+                page-break-inside: avoid;
+                margin: 20px 0;
+            }
+            
+            /* تنسيق العناصر */
+            #printableReport .report-header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            
+            #printableReport .report-stats {
+                display: flex !important;
+                justify-content: space-around;
+                margin: 30px 0;
+            }
+            
+            #printableReport .report-section {
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            
+            #printableReport .strengths-box,
+            #printableReport .weaknesses-box,
+            #printableReport .recommendations-box {
+                padding: 15px;
+                margin: 15px 0;
+                border: 2px solid #ddd;
+                border-radius: 8px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .dashboard { grid-template-columns: 1fr; }
+            .targets-grid { grid-template-columns: 1fr; }
+            .report-stats { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header no-print">
+            <h1>📊 نظام تحليل نتائج نافس الوطنية</h1>
+            <p style="font-size: 1.2em;">نظام متكامل مع تحليل ذكي ونقاط القوة والضعف</p>
+        </div>
+
+        <!-- قسم المستهدفات -->
+        <div class="card no-print">
+            <div class="targets-section">
+                <h2 style="color: #4472C4; margin-bottom: 20px;">🎯 المستهدفات لكل مادة</h2>
+                <p style="margin-bottom: 20px; color: #666;">أدخل النسبة المستهدفة لكل مادة (نسبة مئوية)</p>
+                
+                <div class="targets-grid">
+                    <div class="target-input">
+                        <h4>📐 الرياضيات</h4>
+                        <label>النسبة المستهدفة (%)</label>
+                        <input type="number" id="targetMath" placeholder="مثال: 50" value="50" min="0" max="100">
+                    </div>
+
+                    <div class="target-input">
+                        <h4>📖 القراءة</h4>
+                        <label>النسبة المستهدفة (%)</label>
+                        <input type="number" id="targetReading" placeholder="مثال: 55" value="55" min="0" max="100">
+                    </div>
+
+                    <div class="target-input">
+                        <h4>🔬 العلوم</h4>
+                        <label>النسبة المستهدفة (%)</label>
+                        <input type="number" id="targetScience" placeholder="مثال: 60" value="60" min="0" max="100">
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-success" onclick="saveTargets()">💾 حفظ المستهدفات</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- منطقة رفع الملف -->
+        <div class="card no-print" id="uploadCard" style="display: none;">
+            <h2 style="color: #4472C4; margin-bottom: 25px; text-align: center;">📁 ارفع ملف نافس</h2>
+            
+            <div class="alert alert-info">
+                <strong>💡 تعليمات:</strong>
+                <br>• ارفع ملف نافس الرسمي (.xlsx)
+                <br>• سيتم التركيز على نتائج آخر سنة
+                <br>• ستظهر نقاط القوة والضعف والتوصيات تلقائياً
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📤</div>
+                <h2>اسحب ملف Excel هنا</h2>
+                <p style="font-size: 1.2em; margin: 15px 0;">أو اضغط للاختيار</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+            </div>
+
+            <div class="spinner" id="spinner"></div>
+            <div id="status"></div>
+        </div>
+        
+        <!-- زر تحميل ملف مختلف -->
+        <div class="card no-print" id="uploadButton" style="display: none; text-align: center;">
+            <button class="btn" onclick="showUploadArea()" style="font-size: 1.1em; padding: 12px 30px;">
+                📁 تحميل ملف مختلف
+            </button>
+        </div>
+
+        <!-- لوحة المعلومات -->
+        <div class="card hidden no-print" id="dashboardCard">
+            <h2 style="color: #4472C4; margin-bottom: 20px;">📈 أداء العام <span id="currentYear"></span></h2>
+            <div class="dashboard" id="stats"></div>
+        </div>
+
+        <!-- جدول المقارنة -->
+        <div class="card hidden no-print" id="comparisonCard">
+            <h2 style="color: #4472C4; margin-bottom: 20px;">📊 جدول المقارنة التفصيلي</h2>
+            <div id="comparisonTableContainer"></div>
+        </div>
+
+        <!-- التحكم -->
+        <div class="card hidden no-print" id="controlsCard">
+            <h2 style="color: #4472C4; margin-bottom: 20px;">⚙️ خيارات العرض</h2>
+            <div class="controls">
+                <div class="form-group">
+                    <label>📚 اختر المادة</label>
+                    <select id="subjectSelect" onchange="updateView()">
+                        <option value="all">جميع المواد</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🏫 اختر مدرسة</label>
+                    <select id="schoolSelect" onchange="updateView()">
+                        <option value="">الكل</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- المحتوى -->
+        <div class="card hidden" id="mainCard">
+            <div class="tabs no-print">
+                <button class="tab active" onclick="switchTab(0)">📊 الرسومات</button>
+                <button class="tab" onclick="switchTab(1)">📄 التقرير الشامل</button>
+            </div>
+
+            <!-- Tab: الرسومات -->
+            <div class="tab-content active" id="tab0">
+                <div id="chartsContent"></div>
+            </div>
+
+            <!-- Tab: التقرير -->
+            <div class="tab-content" id="tab1">
+                <div id="reportPreview"></div>
+                <div style="text-align: center; margin-top: 30px;" class="no-print">
+                    <button class="btn" onclick="exportPDF()">📥 تصدير PDF</button>
+                    <button class="btn" onclick="printReport()">🖨️ طباعة</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- منطقة الطباعة المخفية -->
+        <div id="printableReport" style="display: none;">
+            <div id="reportContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let data = { 
+            raw: [], 
+            school: '', 
+            subject: 'all',
+            latestYear: '',
+            previousYear: '',
+            charts: {},
+            targets: {
+                math: 50,
+                reading: 55,
+                science: 60
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTargets();
+            setupFileUpload();
+            autoLoadData(); // تحميل تلقائي لقاعدة البيانات
+        });
+        
+        function autoLoadData() {
+            showStatus('⏳ جاري تحميل قاعدة البيانات...', 'info');
+            
+            // تحميل الملف JSON من المستودع
+            fetch('data.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('فشل تحميل قاعدة البيانات');
+                    }
+                    return response.json();
+                })
+                .then(rows => {
+                    if (!rows || rows.length === 0) {
+                        throw new Error('قاعدة البيانات فارغة');
+                    }
+                    
+                    data.raw = rows;
+                    
+                    // التعرف على عدد المدارس
+                    const schoolsSet = new Set();
+                    for (let i = 0; i < rows.length; i++) {
+                        const schoolName = rows[i]['اسم المدرسة'] || rows[i]['المدرسة'];
+                        if (schoolName) schoolsSet.add(schoolName);
+                    }
+                    const schoolsCount = schoolsSet.size;
+                    
+                    if (schoolsCount === 1) {
+                        data.school = Array.from(schoolsSet)[0];
+                    } else if (schoolsCount > 1) {
+                        data.school = 'قاعدة بيانات (' + schoolsCount + ' مدرسة)';
+                    } else {
+                        data.school = 'قاعدة بيانات نافس';
+                    }
+                    
+                    const years = [...new Set(rows.map(r => r['العام الدراسي - ميلادي']))].filter(Boolean).sort();
+                    data.latestYear = years[years.length - 1];
+                    data.previousYear = years.length > 1 ? years[years.length - 2] : null;
+                    
+                    populateSelects();
+                    populateSchoolsList();
+                    showDashboard();
+                    showComparison();
+                    showControls();
+                    showMain();
+                    updateView();
+                    
+                    if (schoolsCount === 1) {
+                        showStatus('✅ تم تحميل نتائج ' + data.school + ' للعام ' + data.latestYear, 'success');
+                    } else if (schoolsCount > 1) {
+                        showStatus('✅ تم تحميل ' + schoolsCount + ' مدرسة - اختر مدرسة محددة من القائمة', 'success');
+                    }
+                    
+                    // إخفاء منطقة الرفع وإظهار زر التحميل
+                    document.getElementById('uploadCard').style.display = 'none';
+                    document.getElementById('uploadButton').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('خطأ في تحميل قاعدة البيانات:', error);
+                    showStatus('⚠️ تعذر تحميل قاعدة البيانات تلقائياً - يمكنك رفع ملف يدوياً', 'warning');
+                    // إظهار منطقة الرفع
+                    document.getElementById('uploadCard').style.display = 'block';
+                    document.getElementById('uploadButton').style.display = 'none';
+                });
+        }
+        
+        function showUploadArea() {
+            document.getElementById('uploadCard').style.display = 'block';
+            document.getElementById('uploadButton').style.display = 'none';
+        }
+
+        function saveTargets() {
+            data.targets.math = parseFloat(document.getElementById('targetMath').value) || 50;
+            data.targets.reading = parseFloat(document.getElementById('targetReading').value) || 55;
+            data.targets.science = parseFloat(document.getElementById('targetScience').value) || 60;
+            
+            localStorage.setItem('nafesTargets', JSON.stringify(data.targets));
+            showStatus('✅ تم حفظ المستهدفات بنجاح!', 'success');
+            
+            if (data.raw.length > 0) updateView();
+        }
+
+        function loadTargets() {
+            const saved = localStorage.getItem('nafesTargets');
+            if (saved) {
+                try {
+                    data.targets = JSON.parse(saved);
+                    document.getElementById('targetMath').value = data.targets.math;
+                    document.getElementById('targetReading').value = data.targets.reading;
+                    document.getElementById('targetScience').value = data.targets.science;
+                } catch(e) {
+                    console.log('Error loading targets:', e);
+                }
+            }
+        }
+
+        function setupFileUpload() {
+            const area = document.getElementById('uploadArea');
+            const input = document.getElementById('fileInput');
+            
+            area.onclick = function() { input.click(); };
+            
+            area.ondragover = function(e) {
+                e.preventDefault();
+                area.classList.add('dragover');
+            };
+            
+            area.ondragleave = function() {
+                area.classList.remove('dragover');
+            };
+            
+            area.ondrop = function(e) {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+            };
+            
+            input.onchange = function(e) {
+                if (e.target.files[0]) processFile(e.target.files[0]);
+            };
+        }
+
+        async function processFile(file) {
+            if (!file.name.match(/\.xlsx?$/)) {
+                showStatus('⚠️ يرجى رفع ملف Excel (.xlsx)', 'warning');
+                return;
+            }
+
+            document.getElementById('spinner').classList.add('show');
+            showStatus('⏳ جاري قراءة الملف...', 'info');
+
+            try {
+                const buffer = await file.arrayBuffer();
+                const wb = XLSX.read(buffer);
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet);
+
+                if (!rows.length) throw new Error('الملف فارغ');
+
+                data.raw = rows;
+                
+                // التعرف على عدد المدارس
+                const schoolsSet = new Set();
+                for (let i = 0; i < rows.length; i++) {
+                    const schoolName = rows[i]['اسم المدرسة'] || rows[i]['المدرسة'];
+                    if (schoolName) schoolsSet.add(schoolName);
+                }
+                const schoolsCount = schoolsSet.size;
+                
+                console.log('📊 إحصائيات الملف:');
+                console.log('  - إجمالي السجلات:', rows.length);
+                console.log('  - عدد المدارس الفعلي:', schoolsCount);
+                console.log('  - متوسط السجلات لكل مدرسة:', (rows.length / schoolsCount).toFixed(1));
+                
+                // تحديد اسم المدرسة
+                if (schoolsCount === 1) {
+                    data.school = Array.from(schoolsSet)[0];
+                } else if (schoolsCount > 1) {
+                    data.school = 'قاعدة بيانات (' + schoolsCount + ' مدرسة)';
+                } else {
+                    data.school = file.name.replace(/\.xlsx?$/gi, '').trim();
+                }
+                
+                const years = [...new Set(rows.map(r => r['العام الدراسي - ميلادي']))].filter(Boolean).sort();
+                data.latestYear = years[years.length - 1];
+                data.previousYear = years.length > 1 ? years[years.length - 2] : null;
+
+                console.log('السنوات المتاحة:', years);
+                console.log('آخر سنة:', data.latestYear);
+
+                populateSelects();
+                populateSchoolsList();
+                showDashboard();
+                showComparison();
+                showControls();
+                showMain();
+                updateView();
+
+                if (schoolsCount === 1) {
+                    showStatus('✅ تم تحميل نتائج ' + data.school + ' للعام ' + data.latestYear, 'success');
+                } else if (schoolsCount > 1) {
+                    showStatus('✅ تم تحميل ' + schoolsCount + ' مدرسة - اختر مدرسة محددة من القائمة', 'success');
+                } else {
+                    showStatus('✅ تم تحميل الملف', 'success');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                showStatus('❌ خطأ في قراءة الملف: ' + err.message, 'warning');
+            } finally {
+                document.getElementById('spinner').classList.remove('show');
+            }
+        }
+
+        function populateSchoolsList() {
+            const schoolSelect = document.getElementById('schoolSelect');
+            if (!schoolSelect) return;
+
+            // استخراج أسماء المدارس الفريدة
+            const schoolsSet = new Set();
+            for (let i = 0; i < data.raw.length; i++) {
+                const schoolName = data.raw[i]['اسم المدرسة'] || data.raw[i]['المدرسة'];
+                if (schoolName && typeof schoolName === 'string' && schoolName.trim()) {
+                    schoolsSet.add(schoolName.trim());
+                }
+            }
+            
+            const schoolNames = Array.from(schoolsSet).sort();
+            
+            console.log('📋 عدد المدارس المتاحة:', schoolNames.length);
+            
+            if (schoolNames.length > 1) {
+                let html = '<option value="">الكل</option>';
+                for (let i = 0; i < schoolNames.length; i++) {
+                    html += '<option value="' + schoolNames[i] + '">' + schoolNames[i] + '</option>';
+                }
+                schoolSelect.innerHTML = html;
+                schoolSelect.disabled = false;
+            } else if (schoolNames.length === 1) {
+                schoolSelect.innerHTML = '<option value="' + schoolNames[0] + '">' + schoolNames[0] + '</option>';
+                schoolSelect.disabled = true;
+            } else {
+                schoolSelect.innerHTML = '<option value="">غير متوفر</option>';
+                schoolSelect.disabled = true;
+            }
+        }
+
+        function populateSelects() {
+            const subjects = [...new Set(data.raw.map(r => r['المجال']))];
+            document.getElementById('subjectSelect').innerHTML = 
+                '<option value="all">جميع المواد</option>' + 
+                subjects.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+            
+            const schoolNames = [...new Set(data.raw.map(r => r['المدرسة'] || r['اسم المدرسة']).filter(Boolean))];
+            const schoolSelect = document.getElementById('schoolSelect');
+            
+            if (schoolNames.length > 1) {
+                schoolSelect.innerHTML = '<option value="">الكل</option>' + 
+                    schoolNames.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+                schoolSelect.disabled = false;
+            } else if (schoolNames.length === 1) {
+                schoolSelect.innerHTML = '<option value="' + schoolNames[0] + '">' + schoolNames[0] + '</option>';
+                schoolSelect.disabled = true;
+            } else {
+                schoolSelect.innerHTML = '<option value="">غير متوفر</option>';
+                schoolSelect.disabled = true;
+            }
+        }
+
+        function showDashboard() {
+            // عند رفع ملف متعدد المدارس، نعرض المتوسط العام مباشرة
+            const schoolsSet = new Set();
+            for (let i = 0; i < data.raw.length; i++) {
+                const schoolName = data.raw[i]['اسم المدرسة'] || data.raw[i]['المدرسة'];
+                if (schoolName) schoolsSet.add(schoolName);
+            }
+            
+            if (schoolsSet.size > 1) {
+                // ملف متعدد المدارس - نعرض المتوسط العام
+                showDashboardFiltered(data.raw);
+                document.getElementById('dashboardCard').classList.remove('hidden');
+                return;
+            }
+            
+            // ملف مدرسة واحدة - نعرض البيانات مباشرة
+            showDashboardFiltered(data.raw);
+            document.getElementById('dashboardCard').classList.remove('hidden');
+        }
+
+        function showDashboardFiltered(baseData) {
+            const latestData = baseData.filter(r => r['العام الدراسي - ميلادي'] === data.latestYear);
+            const previousData = data.previousYear ? baseData.filter(r => r['العام الدراسي - ميلادي'] === data.previousYear) : null;
+            
+            const subjects = ['الرياضيات', 'القراءة', 'العلوم'];
+            const targetMap = {
+                'الرياضيات': data.targets.math,
+                'القراءة': data.targets.reading,
+                'العلوم': data.targets.science
+            };
+            
+            // التحقق من عدد المدارس
+            const schoolsSet = new Set();
+            for (let i = 0; i < baseData.length; i++) {
+                const schoolName = baseData[i]['اسم المدرسة'] || baseData[i]['المدرسة'];
+                if (schoolName) schoolsSet.add(schoolName);
+            }
+            const isMultipleSchools = schoolsSet.size > 1;
+            
+            console.log('📊 تشخيص لوحة المعلومات:');
+            console.log('العام:', data.latestYear);
+            console.log('عدد السجلات:', latestData.length);
+            console.log('عدد المدارس:', schoolsSet.size);
+            
+            let html = '';
+            
+            for (let i = 0; i < subjects.length; i++) {
+                const subject = subjects[i];
+                
+                let perf = 0;
+                let dept = 0;
+                let kingdom = 0;
+                
+                if (isMultipleSchools) {
+                    // حساب المتوسط المرجح لجميع المدارس
+                    const subjectData = latestData.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    
+                    let totalStudents = 0;
+                    let totalProficient = 0;
+                    let sumDept = 0;
+                    let sumKingdom = 0;
+                    let count = 0;
+                    
+                    for (let j = 0; j < subjectData.length; j++) {
+                        const students = subjectData[j]['مجموع المختبرين'] || 0;
+                        const proficient = subjectData[j]['مجموع المتقنين'] || 0;
+                        totalStudents += students;
+                        totalProficient += proficient;
+                        sumDept += subjectData[j]['المتوسط على مستوى إدارة التعليم'] || 0;
+                        sumKingdom += subjectData[j]['المتوسط على مستوى المملكة'] || 0;
+                        count++;
+                    }
+                    
+                    if (totalStudents > 0) {
+                        perf = (totalProficient / totalStudents) * 100;
+                        dept = count > 0 ? sumDept / count : 0;
+                        kingdom = count > 0 ? sumKingdom / count : 0;
+                    }
+                    
+                    console.log('---');
+                    console.log('المادة:', subject);
+                    console.log('عدد المدارس:', count);
+                    console.log('إجمالي الطلاب:', totalStudents);
+                    console.log('المتوسط العام:', perf.toFixed(1) + '%');
+                    
+                } else {
+                    // مدرسة واحدة - الطريقة العادية
+                    const current = latestData.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    
+                    if (current) {
+                        perf = current['نسبة المتقنين'] || 0;
+                        dept = current['المتوسط على مستوى إدارة التعليم'] || 0;
+                        kingdom = current['المتوسط على مستوى المملكة'] || 0;
+                        
+                        console.log('---');
+                        console.log('المادة:', subject);
+                        console.log('نسبة المتقنين:', perf);
+                    }
+                }
+                
+                if (perf > 0 || isMultipleSchools) {
+                    const target = targetMap[subject];
+                    
+                    let warningText = '';
+                    if (perf > 100 || perf < 0) {
+                        warningText = '<div style="color: #fff; background: #dc3545; padding: 5px; margin-top: 5px; border-radius: 5px; font-size: 0.9em;">⚠️ بيانات غير صحيحة!</div>';
+                        perf = Math.min(100, Math.max(0, perf));
+                    }
+                    
+                    let cardClass = 'neutral';
+                    let trendText = '';
+                    
+                    // حساب التحسن (للمتوسط العام أو مدرسة واحدة)
+                    if (previousData && previousData.length > 0) {
+                        let prevPerf = 0;
+                        
+                        if (isMultipleSchools) {
+                            const prevSubjectData = previousData.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                            let prevTotal = 0;
+                            let prevProf = 0;
+                            for (let j = 0; j < prevSubjectData.length; j++) {
+                                prevTotal += prevSubjectData[j]['مجموع المختبرين'] || 0;
+                                prevProf += prevSubjectData[j]['مجموع المتقنين'] || 0;
+                            }
+                            if (prevTotal > 0) prevPerf = (prevProf / prevTotal) * 100;
+                        } else {
+                            const previous = previousData.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                            if (previous) prevPerf = previous['نسبة المتقنين'] || 0;
+                        }
+                        
+                        if (prevPerf > 0) {
+                            const change = (perf - prevPerf).toFixed(1);
+                            if (change > 0) {
+                                cardClass = 'improved';
+                                trendText = '<div class="trend">📈 تحسن: +' + change + '%</div>';
+                            } else if (change < 0) {
+                                cardClass = 'declined';
+                                trendText = '<div class="trend">📉 تراجع: ' + change + '%</div>';
+                            } else {
+                                trendText = '<div class="trend">➡️ ثابت</div>';
+                            }
+                        }
+                    }
+                    
+                    const deptDiff = (perf - dept).toFixed(1);
+                    const kingdomDiff = (perf - kingdom).toFixed(1);
+                    const targetDiff = (perf - target).toFixed(1);
+                    
+                    html += '<div class="stat-card ' + cardClass + '">';
+                    html += '<h3>' + perf.toFixed(1) + '%</h3>';
+                    html += '<p>' + subject + '</p>';
+                    if (isMultipleSchools) {
+                        html += '<p style="font-size: 0.85em; opacity: 0.9;">(' + schoolsSet.size + ' مدرسة)</p>';
+                    }
+                    html += trendText;
+                    html += warningText;
+                    html += '<div class="comparison">';
+                    html += '<div>الإدارة: ' + dept.toFixed(1) + '% (' + (deptDiff >= 0 ? '+' : '') + deptDiff + '%)</div>';
+                    html += '<div>المملكة: ' + kingdom.toFixed(1) + '% (' + (kingdomDiff >= 0 ? '+' : '') + kingdomDiff + '%)</div>';
+                    html += '<div>المستهدف: ' + target + '% (' + (targetDiff >= 0 ? '+' : '') + targetDiff + '%)</div>';
+                    html += '</div></div>';
+                }
+            }
+
+            document.getElementById('currentYear').textContent = data.latestYear;
+            document.getElementById('stats').innerHTML = html;
+        }
+
+        function showComparison() {
+            const latestData = data.raw.filter(r => r['العام الدراسي - ميلادي'] === data.latestYear);
+            const subjects = ['الرياضيات', 'القراءة', 'العلوم'];
+            const targetMap = {
+                'الرياضيات': data.targets.math,
+                'القراءة': data.targets.reading,
+                'العلوم': data.targets.science
+            };
+            
+            // التحقق من عدد المدارس
+            const schoolsSet = new Set();
+            for (let i = 0; i < data.raw.length; i++) {
+                const schoolName = data.raw[i]['اسم المدرسة'] || data.raw[i]['المدرسة'];
+                if (schoolName) schoolsSet.add(schoolName);
+            }
+            const isMultipleSchools = schoolsSet.size > 1;
+            
+            let html = '<table class="comparison-table"><thead><tr>';
+            html += '<th>المادة</th><th>المدرسة</th><th>المستهدف</th><th>الفجوة</th><th>الإدارة</th><th>المملكة</th>';
+            html += '</tr></thead><tbody>';
+
+            for (let i = 0; i < subjects.length; i++) {
+                const subject = subjects[i];
+                let school = 0;
+                let dept = 0;
+                let kingdom = 0;
+                
+                if (isMultipleSchools) {
+                    // حساب المتوسط المرجح
+                    const subjectData = latestData.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    let totalStudents = 0;
+                    let totalProficient = 0;
+                    let sumDept = 0;
+                    let sumKingdom = 0;
+                    let count = 0;
+                    
+                    for (let j = 0; j < subjectData.length; j++) {
+                        totalStudents += subjectData[j]['مجموع المختبرين'] || 0;
+                        totalProficient += subjectData[j]['مجموع المتقنين'] || 0;
+                        sumDept += subjectData[j]['المتوسط على مستوى إدارة التعليم'] || 0;
+                        sumKingdom += subjectData[j]['المتوسط على مستوى المملكة'] || 0;
+                        count++;
+                    }
+                    
+                    if (totalStudents > 0) {
+                        school = (totalProficient / totalStudents) * 100;
+                        dept = count > 0 ? sumDept / count : 0;
+                        kingdom = count > 0 ? sumKingdom / count : 0;
+                    }
+                } else {
+                    // مدرسة واحدة
+                    const subjectData = latestData.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    if (subjectData) {
+                        school = subjectData['نسبة المتقنين'] || 0;
+                        dept = subjectData['المتوسط على مستوى إدارة التعليم'] || 0;
+                        kingdom = subjectData['المتوسط على مستوى المملكة'] || 0;
+                    }
+                }
+                
+                if (school > 0 || isMultipleSchools) {
+                    const target = targetMap[subject];
+                    const gap = (school - target).toFixed(1);
+                    const gapColor = gap >= 0 ? '#d4edda' : '#f8d7da';
+                    
+                    html += '<tr>';
+                    html += '<td><strong>' + subject + '</strong></td>';
+                    html += '<td><strong>' + school.toFixed(1) + '%</strong></td>';
+                    html += '<td>' + target + '%</td>';
+                    html += '<td style="background: ' + gapColor + '; font-weight: bold;">' + (gap >= 0 ? '+' : '') + gap + '%</td>';
+                    html += '<td>' + dept.toFixed(1) + '%</td>';
+                    html += '<td>' + kingdom.toFixed(1) + '%</td>';
+                    html += '</tr>';
+                }
+            }
+
+            html += '</tbody></table>';
+            
+            document.getElementById('comparisonTableContainer').innerHTML = html;
+            document.getElementById('comparisonCard').classList.remove('hidden');
+        }
+
+        function showControls() {
+            document.getElementById('controlsCard').classList.remove('hidden');
+        }
+
+        function showMain() {
+            document.getElementById('mainCard').classList.remove('hidden');
+        }
+
+        function updateView() {
+            data.subject = document.getElementById('subjectSelect').value;
+            const selectedSchool = document.getElementById('schoolSelect').value;
+            
+            console.log('🔍 التصفية:', { school: selectedSchool || 'الكل', subject: data.subject });
+            
+            let baseData = data.raw;
+            if (selectedSchool) {
+                baseData = data.raw.filter(r => (r['المدرسة'] === selectedSchool || r['اسم المدرسة'] === selectedSchool));
+                console.log('📊 عدد السجلات بعد التصفية:', baseData.length);
+            }
+            
+            showDashboardFiltered(baseData);
+            drawCharts(baseData);
+            generateReport(baseData);
+        }
+
+        function drawCharts(baseData) {
+            const latestData = baseData.filter(r => r['العام الدراسي - ميلادي'] === data.latestYear);
+            let filtered = latestData;
+            
+            if (data.subject !== 'all') {
+                filtered = filtered.filter(r => r['المجال'] === data.subject);
+            }
+
+            let html = '';
+            html += '<h3 style="color: #4472C4;">المقارنة مع الإدارة والمملكة</h3>';
+            html += '<div class="chart-container"><canvas id="compChart"></canvas></div>';
+            html += '<h3 style="color: #4472C4;">نسبة الإتقان في المجالات الفرعية</h3>';
+            html += '<div class="chart-container"><canvas id="domainsChart"></canvas></div>';
+            html += '<h3 style="color: #4472C4;">توزيع مستويات الأداء</h3>';
+            html += '<div class="chart-container"><canvas id="levelsChart"></canvas></div>';
+            html += '<h3 style="color: #4472C4;">تطور الأداء عبر السنوات</h3>';
+            html += '<div class="chart-container"><canvas id="trendChart"></canvas></div>';
+
+            document.getElementById('chartsContent').innerHTML = html;
+
+            setTimeout(function() {
+                drawComparisonChart(filtered);
+                drawDomainsChart(filtered);
+                drawLevelsChart(filtered);
+                drawTrendChart(baseData);
+            }, 100);
+        }
+
+        function drawComparisonChart(filtered) {
+            const ctx = document.getElementById('compChart');
+            if (!ctx) return;
+
+            const subjects = data.subject === 'all' ? ['الرياضيات', 'القراءة', 'العلوم'] : [data.subject];
+            const schoolData = [];
+            const deptData = [];
+            const kingdomData = [];
+            const targetData = [];
+            const targetMap = {
+                'الرياضيات': data.targets.math,
+                'القراءة': data.targets.reading,
+                'العلوم': data.targets.science
+            };
+
+            // التحقق من عدد المدارس
+            const schoolsSet = new Set();
+            for (let i = 0; i < filtered.length; i++) {
+                const schoolName = filtered[i]['اسم المدرسة'] || filtered[i]['المدرسة'];
+                if (schoolName) schoolsSet.add(schoolName);
+            }
+            const isMultipleSchools = schoolsSet.size > 1;
+
+            for (let i = 0; i < subjects.length; i++) {
+                const subject = subjects[i];
+                
+                if (isMultipleSchools) {
+                    // حساب المتوسط المرجح لجميع المدارس
+                    const subjectData = filtered.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    
+                    let totalStudents = 0;
+                    let totalProficient = 0;
+                    let sumDept = 0;
+                    let sumKingdom = 0;
+                    let count = 0;
+                    
+                    for (let j = 0; j < subjectData.length; j++) {
+                        const students = subjectData[j]['مجموع المختبرين'] || 0;
+                        const proficient = subjectData[j]['مجموع المتقنين'] || 0;
+                        totalStudents += students;
+                        totalProficient += proficient;
+                        sumDept += subjectData[j]['المتوسط على مستوى إدارة التعليم'] || 0;
+                        sumKingdom += subjectData[j]['المتوسط على مستوى المملكة'] || 0;
+                        count++;
+                    }
+                    
+                    if (totalStudents > 0) {
+                        schoolData.push((totalProficient / totalStudents) * 100);
+                        deptData.push(count > 0 ? sumDept / count : 0);
+                        kingdomData.push(count > 0 ? sumKingdom / count : 0);
+                        targetData.push(targetMap[subject] || 0);
+                    }
+                } else {
+                    // مدرسة واحدة فقط
+                    const subjectData = filtered.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    if (subjectData) {
+                        schoolData.push(subjectData['نسبة المتقنين'] || 0);
+                        deptData.push(subjectData['المتوسط على مستوى إدارة التعليم'] || 0);
+                        kingdomData.push(subjectData['المتوسط على مستوى المملكة'] || 0);
+                        targetData.push(targetMap[subject] || 0);
+                    }
+                }
+            }
+
+            if (data.charts.comp) data.charts.comp.destroy();
+
+            data.charts.comp = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: subjects,
+                    datasets: [
+                        { label: 'المدرسة', data: schoolData, backgroundColor: '#4472C4', borderWidth: 2, borderColor: '#2c5282' },
+                        { label: 'الإدارة', data: deptData, backgroundColor: '#ffc107', borderWidth: 2, borderColor: '#d39e00' },
+                        { label: 'المملكة', data: kingdomData, backgroundColor: '#28a745', borderWidth: 2, borderColor: '#1e7e34' },
+                        { 
+                            label: 'المستهدف', 
+                            data: targetData, 
+                            type: 'line',
+                            borderColor: '#dc3545',
+                            backgroundColor: 'transparent',
+                            borderWidth: 3,
+                            borderDash: [10, 5],
+                            pointRadius: 6,
+                            pointBackgroundColor: '#dc3545',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+
+        function drawDomainsChart(filtered) {
+            const ctx = document.getElementById('domainsChart');
+            if (!ctx) return;
+
+            const domains = {};
+            for (let i = 0; i < filtered.length; i++) {
+                const r = filtered[i];
+                const d = r['المجال الفرعي'];
+                if (d !== r['المجال']) {
+                    if (!domains[d]) domains[d] = [];
+                    domains[d].push(r['نسبة المتقنين'] || 0);
+                }
+            }
+
+            const labels = Object.keys(domains);
+            const values = [];
+            for (let i = 0; i < labels.length; i++) {
+                values.push(avg(domains[labels[i]]));
+            }
+
+            if (data.charts.domains) data.charts.domains.destroy();
+
+            const bgColors = [];
+            for (let i = 0; i < values.length; i++) {
+                if (values[i] >= 60) bgColors.push('#28a745');
+                else if (values[i] >= 40) bgColors.push('#ffc107');
+                else bgColors.push('#dc3545');
+            }
+
+            data.charts.domains = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'نسبة الإتقان (%)',
+                        data: values,
+                        backgroundColor: bgColors
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+
+        function drawLevelsChart(filtered) {
+            const ctx = document.getElementById('levelsChart');
+            if (!ctx) return;
+
+            const levels = [];
+            for (let i = 0; i < filtered.length; i++) {
+                const r = filtered[i];
+                levels.push(r['نسبة الطلاب في مستوى الأداء المرتفع'] || 0);
+            }
+
+            const avgHigh = avg(levels.length > 0 ? levels : [0]);
+            
+            const levelsMed = [];
+            for (let i = 0; i < filtered.length; i++) {
+                levelsMed.push(filtered[i]['نسبة الطلاب في مستوى الأداء المتوسط'] || 0);
+            }
+            const avgMed = avg(levelsMed.length > 0 ? levelsMed : [0]);
+            
+            const levelsLow = [];
+            for (let i = 0; i < filtered.length; i++) {
+                levelsLow.push(filtered[i]['نسبة الطلاب في مستوى الأداء المنخفض'] || 0);
+            }
+            const avgLow = avg(levelsLow.length > 0 ? levelsLow : [0]);
+            
+            const levelsVLow = [];
+            for (let i = 0; i < filtered.length; i++) {
+                levelsVLow.push(filtered[i]['نسبة الطلاب في مستوى الأداء المنخفض جدا'] || 0);
+            }
+            const avgVLow = avg(levelsVLow.length > 0 ? levelsVLow : [0]);
+
+            if (data.charts.levels) data.charts.levels.destroy();
+
+            data.charts.levels = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['مرتفع', 'متوسط', 'منخفض', 'منخفض جداً'],
+                    datasets: [{
+                        data: [avgHigh, avgMed, avgLow, avgVLow],
+                        backgroundColor: ['#28a745', '#36a2eb', '#ffce56', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function drawTrendChart(baseData) {
+            const ctx = document.getElementById('trendChart');
+            if (!ctx) return;
+            
+            if (!baseData) baseData = data.raw;
+
+            const years = [...new Set(baseData.map(r => r['العام الدراسي - ميلادي']))].filter(Boolean).sort();
+            const subjects = data.subject === 'all' ? ['الرياضيات', 'القراءة', 'العلوم'] : [data.subject];
+            
+            const datasets = [];
+            const colors = { 'الرياضيات': '#4472C4', 'القراءة': '#28a745', 'العلوم': '#ffc107' };
+
+            // التحقق من عدد المدارس
+            const schoolsSet = new Set();
+            for (let i = 0; i < baseData.length; i++) {
+                const schoolName = baseData[i]['اسم المدرسة'] || baseData[i]['المدرسة'];
+                if (schoolName) schoolsSet.add(schoolName);
+            }
+            const isMultipleSchools = schoolsSet.size > 1;
+
+            for (let s = 0; s < subjects.length; s++) {
+                const subject = subjects[s];
+                const values = [];
+                
+                for (let y = 0; y < years.length; y++) {
+                    const year = years[y];
+                    const yearData = baseData.filter(r => r['العام الدراسي - ميلادي'] === year);
+                    
+                    if (isMultipleSchools) {
+                        // حساب المتوسط المرجح
+                        const subjectData = yearData.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                        let totalStudents = 0;
+                        let totalProficient = 0;
+                        
+                        for (let j = 0; j < subjectData.length; j++) {
+                            totalStudents += subjectData[j]['مجموع المختبرين'] || 0;
+                            totalProficient += subjectData[j]['مجموع المتقنين'] || 0;
+                        }
+                        
+                        values.push(totalStudents > 0 ? (totalProficient / totalStudents) * 100 : 0);
+                    } else {
+                        // مدرسة واحدة
+                        const subjectData = yearData.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                        values.push(subjectData ? (subjectData['نسبة المتقنين'] || 0) : 0);
+                    }
+                }
+
+                datasets.push({
+                    label: subject,
+                    data: values,
+                    borderColor: colors[subject],
+                    backgroundColor: colors[subject] + '20',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true
+                });
+            }
+
+            if (data.charts.trend) data.charts.trend.destroy();
+
+            data.charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: { labels: years, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        } 
+                    }
+                }
+            });
+        }
+
+        function generateReport(baseData) {
+            if (!baseData) baseData = data.raw;
+            const latestData = baseData.filter(r => r['العام الدراسي - ميلادي'] === data.latestYear);
+            let filtered = latestData;
+            
+            if (data.subject !== 'all') {
+                filtered = filtered.filter(r => r['المجال'] === data.subject);
+            }
+
+            const subjects = data.subject === 'all' ? ['الرياضيات', 'القراءة', 'العلوم'] : [data.subject];
+            const targetMap = {
+                'الرياضيات': data.targets.math,
+                'القراءة': data.targets.reading,
+                'العلوم': data.targets.science
+            };
+
+            // التحقق من عدد المدارس
+            const schoolsSet = new Set();
+            for (let i = 0; i < baseData.length; i++) {
+                const schoolName = baseData[i]['اسم المدرسة'] || baseData[i]['المدرسة'];
+                if (schoolName) schoolsSet.add(schoolName);
+            }
+            const isMultipleSchools = schoolsSet.size > 1;
+
+            const analysis = analyzeData(filtered, subjects, targetMap, isMultipleSchools);
+
+            let html = '<div class="report-section">';
+            html += '<div class="report-header">';
+            html += '<h1>' + data.school + '</h1>';
+            html += '<h2>تقرير نتائج نافس الوطنية</h2>';
+            html += '<h3>العام الدراسي: ' + data.latestYear + '</h3>';
+            html += '</div>';
+            html += '<div class="report-stats">';
+            
+            for (let i = 0; i < subjects.length; i++) {
+                const subject = subjects[i];
+                let perf = 0;
+                
+                if (isMultipleSchools) {
+                    // حساب المتوسط المرجح
+                    const subjectData = latestData.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    let totalStudents = 0;
+                    let totalProficient = 0;
+                    
+                    for (let j = 0; j < subjectData.length; j++) {
+                        totalStudents += subjectData[j]['مجموع المختبرين'] || 0;
+                        totalProficient += subjectData[j]['مجموع المتقنين'] || 0;
+                    }
+                    
+                    if (totalStudents > 0) {
+                        perf = (totalProficient / totalStudents) * 100;
+                    }
+                } else {
+                    // مدرسة واحدة
+                    const s = latestData.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    if (s) perf = s['نسبة المتقنين'] || 0;
+                }
+                
+                if (perf > 0 || isMultipleSchools) {
+                    html += '<div class="report-stat">';
+                    html += '<h3>' + subject + '</h3>';
+                    html += '<h2>' + perf.toFixed(1) + '%</h2>';
+                    html += '<p>المستهدف: ' + targetMap[subject] + '%</p>';
+                    html += '</div>';
+                }
+            }
+            
+            html += '</div></div>';
+            
+            html += '<div class="report-section"><div class="strengths-box">';
+            html += '<h3>✅ نقاط القوة</h3><ul>';
+            for (let i = 0; i < analysis.strengths.length; i++) {
+                html += '<li>' + analysis.strengths[i] + '</li>';
+            }
+            html += '</ul></div></div>';
+            
+            html += '<div class="report-section"><div class="weaknesses-box">';
+            html += '<h3>⚠️ نقاط الضعف</h3><ul>';
+            for (let i = 0; i < analysis.weaknesses.length; i++) {
+                html += '<li>' + analysis.weaknesses[i] + '</li>';
+            }
+            html += '</ul></div></div>';
+            
+            html += '<div class="report-section"><div class="recommendations-box">';
+            html += '<h3>💡 التوصيات</h3><ol>';
+            for (let i = 0; i < analysis.recommendations.length; i++) {
+                html += '<li>' + analysis.recommendations[i] + '</li>';
+            }
+            html += '</ol></div></div>';
+            
+            html += '<div class="report-section">';
+            html += '<h3 style="color: #4472C4; text-align: center;">الرسومات البيانية</h3>';
+            html += '<div class="chart-container"><canvas id="reportChart1"></canvas></div>';
+            html += '<div class="chart-container"><canvas id="reportChart2"></canvas></div>';
+            html += '</div>';
+
+            document.getElementById('reportContent').innerHTML = html;
+            
+            // نسخة للعرض (بدون canvas - سنضع صور لاحقاً)
+            let previewHtml = html.replace('id="reportChart1"', 'id="previewChart1"')
+                                  .replace('id="reportChart2"', 'id="previewChart2"');
+            document.getElementById('reportPreview').innerHTML = previewHtml;
+
+            setTimeout(function() {
+                drawReportCharts(filtered);
+                drawPreviewCharts(filtered);
+            }, 100);
+        }
+        
+        function drawPreviewCharts(filtered) {
+            // رسم نسخة للعرض في التبويب
+            const ctx1 = document.getElementById('previewChart1');
+            const ctx2 = document.getElementById('previewChart2');
+            
+            if (!ctx1 || !ctx2) return;
+            
+            // استخدام نفس منطق drawReportCharts
+            const schoolsSet = new Set();
+            for (let i = 0; i < filtered.length; i++) {
+                const schoolName = filtered[i]['اسم المدرسة'] || filtered[i]['المدرسة'];
+                if (schoolName) schoolsSet.add(schoolName);
+            }
+            const isMultipleSchools = schoolsSet.size > 1;
+            
+            const subjects = data.subject === 'all' ? ['الرياضيات', 'القراءة', 'العلوم'] : [data.subject];
+            const schoolData = [];
+            const deptData = [];
+
+            for (let i = 0; i < subjects.length; i++) {
+                const subject = subjects[i];
+                
+                if (isMultipleSchools) {
+                    const subjectData = filtered.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    let totalStudents = 0;
+                    let totalProficient = 0;
+                    let sumDept = 0;
+                    let count = 0;
+                    
+                    for (let j = 0; j < subjectData.length; j++) {
+                        totalStudents += subjectData[j]['مجموع المختبرين'] || 0;
+                        totalProficient += subjectData[j]['مجموع المتقنين'] || 0;
+                        sumDept += subjectData[j]['المتوسط على مستوى إدارة التعليم'] || 0;
+                        count++;
+                    }
+                    
+                    if (totalStudents > 0) {
+                        schoolData.push((totalProficient / totalStudents) * 100);
+                        deptData.push(count > 0 ? sumDept / count : 0);
+                    }
+                } else {
+                    const s = filtered.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    if (s) {
+                        schoolData.push(s['نسبة المتقنين'] || 0);
+                        deptData.push(s['المتوسط على مستوى إدارة التعليم'] || 0);
+                    }
+                }
+            }
+
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: subjects,
+                    datasets: [
+                        { label: 'المدرسة', data: schoolData, backgroundColor: '#4472C4' },
+                        { label: 'الإدارة', data: deptData, backgroundColor: '#ffc107' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'المقارنة مع الإدارة' } },
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+
+            const domains = {};
+            for (let i = 0; i < filtered.length; i++) {
+                const r = filtered[i];
+                const d = r['المجال الفرعي'];
+                if (d !== r['المجال']) {
+                    if (!domains[d]) domains[d] = [];
+                    domains[d].push(r['نسبة المتقنين'] || 0);
+                }
+            }
+
+            const labels = Object.keys(domains);
+            const values = [];
+            for (let i = 0; i < labels.length; i++) {
+                values.push(avg(domains[labels[i]]));
+            }
+
+            const bgColors = [];
+            for (let i = 0; i < values.length; i++) {
+                if (values[i] >= 60) bgColors.push('#28a745');
+                else if (values[i] >= 40) bgColors.push('#ffc107');
+                else bgColors.push('#dc3545');
+            }
+
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'نسبة الإتقان',
+                        data: values,
+                        backgroundColor: bgColors
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'المجالات الفرعية' } },
+                    scales: { x: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+
+        function analyzeData(filtered, subjects, targetMap, isMultipleSchools) {
+            const strengths = [];
+            const weaknesses = [];
+            const recommendations = [];
+
+            for (let i = 0; i < subjects.length; i++) {
+                const subject = subjects[i];
+                let perf = 0;
+                let dept = 0;
+                
+                if (isMultipleSchools) {
+                    // حساب المتوسط المرجح
+                    const subjectData = filtered.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    let totalStudents = 0;
+                    let totalProficient = 0;
+                    let sumDept = 0;
+                    let count = 0;
+                    
+                    for (let j = 0; j < subjectData.length; j++) {
+                        totalStudents += subjectData[j]['مجموع المختبرين'] || 0;
+                        totalProficient += subjectData[j]['مجموع المتقنين'] || 0;
+                        sumDept += subjectData[j]['المتوسط على مستوى إدارة التعليم'] || 0;
+                        count++;
+                    }
+                    
+                    if (totalStudents > 0) {
+                        perf = (totalProficient / totalStudents) * 100;
+                        dept = count > 0 ? sumDept / count : 0;
+                    }
+                } else {
+                    // مدرسة واحدة
+                    const subjectData = filtered.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    if (!subjectData) continue;
+                    perf = subjectData['نسبة المتقنين'] || 0;
+                    dept = subjectData['المتوسط على مستوى إدارة التعليم'] || 0;
+                }
+
+                const target = targetMap[subject];
+
+                if (perf >= target) {
+                    strengths.push('مادة ' + subject + ' حققت المستهدف بنسبة ' + perf.toFixed(1) + '%');
+                }
+                if (perf > dept) {
+                    strengths.push('مادة ' + subject + ' تفوقت على متوسط الإدارة (' + dept.toFixed(1) + '%)');
+                }
+
+                if (perf < target) {
+                    const gap = (target - perf).toFixed(1);
+                    weaknesses.push('مادة ' + subject + ' أقل من المستهدف بـ ' + gap + '%');
+                    recommendations.push('تنفيذ برنامج تقوية مكثف في ' + subject + ' لتقليص الفجوة');
+                }
+                if (perf < dept) {
+                    weaknesses.push('مادة ' + subject + ' أقل من متوسط الإدارة');
+                }
+            }
+
+            const domains = {};
+            for (let i = 0; i < filtered.length; i++) {
+                const r = filtered[i];
+                const d = r['المجال الفرعي'];
+                if (d !== r['المجال']) {
+                    domains[d] = r['نسبة المتقنين'] || 0;
+                }
+            }
+
+            const sortedDomains = Object.entries(domains).sort(function(a, b) { return b[1] - a[1]; });
+            if (sortedDomains.length > 0 && !isMultipleSchools) {
+                strengths.push('أفضل مجال فرعي: ' + sortedDomains[0][0] + ' بنسبة ' + sortedDomains[0][1] + '%');
+                
+                const weakest = sortedDomains[sortedDomains.length - 1];
+                if (weakest[1] < 50) {
+                    weaknesses.push('أضعف مجال: ' + weakest[0] + ' بنسبة ' + weakest[1] + '%');
+                    recommendations.push('التركيز على تحسين ' + weakest[0] + ' كأولوية');
+                }
+            }
+
+            if (strengths.length === 0) {
+                strengths.push('يوجد مجال للتحسين في جميع المواد');
+            }
+
+            return { strengths: strengths, weaknesses: weaknesses, recommendations: recommendations };
+        }
+
+        function drawReportCharts(filtered) {
+            // التحقق من عدد المدارس
+            const schoolsSet = new Set();
+            for (let i = 0; i < filtered.length; i++) {
+                const schoolName = filtered[i]['اسم المدرسة'] || filtered[i]['المدرسة'];
+                if (schoolName) schoolsSet.add(schoolName);
+            }
+            const isMultipleSchools = schoolsSet.size > 1;
+            
+            const ctx1 = document.getElementById('reportChart1');
+            if (ctx1) {
+                const subjects = data.subject === 'all' ? ['الرياضيات', 'القراءة', 'العلوم'] : [data.subject];
+                const schoolData = [];
+                const deptData = [];
+
+                for (let i = 0; i < subjects.length; i++) {
+                    const subject = subjects[i];
+                    
+                    if (isMultipleSchools) {
+                        // حساب المتوسط المرجح
+                        const subjectData = filtered.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                        let totalStudents = 0;
+                        let totalProficient = 0;
+                        let sumDept = 0;
+                        let count = 0;
+                        
+                        for (let j = 0; j < subjectData.length; j++) {
+                            totalStudents += subjectData[j]['مجموع المختبرين'] || 0;
+                            totalProficient += subjectData[j]['مجموع المتقنين'] || 0;
+                            sumDept += subjectData[j]['المتوسط على مستوى إدارة التعليم'] || 0;
+                            count++;
+                        }
+                        
+                        if (totalStudents > 0) {
+                            schoolData.push((totalProficient / totalStudents) * 100);
+                            deptData.push(count > 0 ? sumDept / count : 0);
+                        }
+                    } else {
+                        // مدرسة واحدة
+                        const s = filtered.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                        if (s) {
+                            schoolData.push(s['نسبة المتقنين'] || 0);
+                            deptData.push(s['المتوسط على مستوى إدارة التعليم'] || 0);
+                        }
+                    }
+                }
+
+                new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: subjects,
+                        datasets: [
+                            { label: 'المدرسة', data: schoolData, backgroundColor: '#4472C4' },
+                            { label: 'الإدارة', data: deptData, backgroundColor: '#ffc107' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { title: { display: true, text: 'المقارنة مع الإدارة' } },
+                        scales: { y: { beginAtZero: true, max: 100 } }
+                    }
+                });
+            }
+
+            const ctx2 = document.getElementById('reportChart2');
+            if (ctx2) {
+                const domains = {};
+                for (let i = 0; i < filtered.length; i++) {
+                    const r = filtered[i];
+                    const d = r['المجال الفرعي'];
+                    if (d !== r['المجال']) {
+                        if (!domains[d]) domains[d] = [];
+                        domains[d].push(r['نسبة المتقنين'] || 0);
+                    }
+                }
+
+                const labels = Object.keys(domains);
+                const values = [];
+                for (let i = 0; i < labels.length; i++) {
+                    values.push(avg(domains[labels[i]]));
+                }
+
+                const bgColors = [];
+                for (let i = 0; i < values.length; i++) {
+                    if (values[i] >= 60) bgColors.push('#28a745');
+                    else if (values[i] >= 40) bgColors.push('#ffc107');
+                    else bgColors.push('#dc3545');
+                }
+
+                new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'نسبة الإتقان',
+                            data: values,
+                            backgroundColor: bgColors
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { title: { display: true, text: 'المجالات الفرعية' } },
+                        scales: { x: { beginAtZero: true, max: 100 } }
+                    }
+                });
+            }
+        }
+
+        function avg(arr) {
+            if (!arr || arr.length === 0) return 0;
+            let sum = 0;
+            for (let i = 0; i < arr.length; i++) {
+                sum += arr[i];
+            }
+            return sum / arr.length;
+        }
+
+        function switchTab(i) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            for (let j = 0; j < tabs.length; j++) {
+                if (j === i) {
+                    tabs[j].classList.add('active');
+                    contents[j].classList.add('active');
+                } else {
+                    tabs[j].classList.remove('active');
+                    contents[j].classList.remove('active');
+                }
+            }
+        }
+
+        function showStatus(msg, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<div class="alert alert-' + type + '">' + msg + '</div>';
+            setTimeout(function() {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function printReport() {
+            const reportContent = document.getElementById('reportContent');
+            if (!reportContent || !reportContent.innerHTML.trim()) {
+                alert('⚠️ يرجى الانتظار حتى يتم تحميل التقرير');
+                return;
+            }
+            
+            console.log('🖨️ بدء عملية الطباعة...');
+            
+            // تحويل جميع Canvas إلى صور
+            const canvases = reportContent.getElementsByTagName('canvas');
+            console.log('عدد Canvas:', canvases.length);
+            
+            if (canvases.length === 0) {
+                console.warn('⚠️ لا توجد رسومات بيانية!');
+                window.print();
+                return;
+            }
+            
+            const images = [];
+            let loadedCount = 0;
+            
+            for (let i = 0; i < canvases.length; i++) {
+                const canvas = canvases[i];
+                console.log('Canvas', i, '- Width:', canvas.width, 'Height:', canvas.height);
+                
+                try {
+                    const img = new Image();
+                    const dataUrl = canvas.toDataURL('image/png');
+                    
+                    img.onload = function() {
+                        loadedCount++;
+                        console.log('✅ تم تحميل صورة', loadedCount, 'من', canvases.length);
+                        
+                        // عندما تحمّل جميع الصور
+                        if (loadedCount === canvases.length) {
+                            console.log('✅ جميع الصور جاهزة - فتح نافذة الطباعة');
+                            setTimeout(function() {
+                                window.print();
+                                
+                                // إعادة Canvas بعد الطباعة
+                                setTimeout(function() {
+                                    console.log('🔄 إعادة الرسومات الأصلية...');
+                                    for (let j = 0; j < images.length; j++) {
+                                        images[j].canvas.style.display = 'block';
+                                        if (images[j].img.parentNode) {
+                                            images[j].img.parentNode.removeChild(images[j].img);
+                                        }
+                                    }
+                                    console.log('✅ تمت العملية');
+                                }, 100);
+                            }, 500);
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        console.error('❌ فشل تحميل صورة', i);
+                        loadedCount++;
+                    };
+                    
+                    img.src = dataUrl;
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                    img.style.display = 'block';
+                    img.className = 'chart-print-image';
+                    
+                    console.log('✅ تم تحويل Canvas', i, 'إلى صورة');
+                    
+                    // إخفاء Canvas وإظهار الصورة
+                    canvas.style.display = 'none';
+                    canvas.parentNode.insertBefore(img, canvas);
+                    images.push({ canvas: canvas, img: img });
+                } catch(e) {
+                    console.error('❌ خطأ في تحويل Canvas', i, ':', e);
+                }
+            }
+        }
+
+        function exportPDF() {
+            const element = document.getElementById('reportContent');
+            if (!element || !element.innerHTML.trim()) {
+                alert('⚠️ يرجى الانتظار حتى يتم تحميل التقرير');
+                return;
+            }
+            
+            console.log('📥 بدء تصدير PDF...');
+            
+            // تحويل Canvas إلى صور أولاً
+            const canvases = element.getElementsByTagName('canvas');
+            console.log('عدد Canvas:', canvases.length);
+            
+            if (canvases.length === 0) {
+                console.warn('⚠️ لا توجد رسومات بيانية!');
+                exportPDFNow(element);
+                return;
+            }
+            
+            const images = [];
+            let loadedCount = 0;
+            
+            for (let i = 0; i < canvases.length; i++) {
+                const canvas = canvases[i];
+                
+                try {
+                    const img = new Image();
+                    const dataUrl = canvas.toDataURL('image/png', 1.0);
+                    
+                    img.onload = function() {
+                        loadedCount++;
+                        console.log('✅ تم تحميل صورة', loadedCount, 'من', canvases.length);
+                        
+                        // عندما تحمّل جميع الصور
+                        if (loadedCount === canvases.length) {
+                            console.log('✅ جميع الصور جاهزة - بدء التصدير');
+                            setTimeout(function() {
+                                exportPDFNow(element, images);
+                            }, 500);
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        console.error('❌ فشل تحميل صورة', i);
+                        loadedCount++;
+                    };
+                    
+                    img.src = dataUrl;
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                    
+                    canvas.style.display = 'none';
+                    canvas.parentNode.insertBefore(img, canvas);
+                    images.push({ canvas: canvas, img: img });
+                } catch(e) {
+                    console.error('❌ خطأ في تحويل Canvas', i, ':', e);
+                }
+            }
+        }
+        
+        function exportPDFNow(element, images) {
+            const opt = {
+                margin: 10,
+                filename: 'تقرير_' + data.school + '_' + data.latestYear + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(function() {
+                console.log('✅ تم التصدير');
+                // إعادة Canvas بعد التصدير
+                if (images) {
+                    for (let i = 0; i < images.length; i++) {
+                        images[i].canvas.style.display = 'block';
+                        if (images[i].img.parentNode) {
+                            images[i].img.parentNode.removeChild(images[i].img);
+                        }
+                    }
+                }
+            }).catch(function(error) {
+                console.error('❌ خطأ في التصدير:', error);
+                alert('حدث خطأ أثناء التصدير. الرجاء المحاولة مرة أخرى.');
+            });
+        }
+    </script>
+</body>
+</html>
