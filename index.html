@@ -1920,17 +1920,52 @@
             
             if (canvases.length === 0) {
                 console.warn('⚠️ لا توجد رسومات بيانية!');
+                window.print();
+                return;
             }
             
             const images = [];
+            let loadedCount = 0;
             
             for (let i = 0; i < canvases.length; i++) {
                 const canvas = canvases[i];
                 console.log('Canvas', i, '- Width:', canvas.width, 'Height:', canvas.height);
                 
                 try {
-                    const img = document.createElement('img');
-                    img.src = canvas.toDataURL('image/png');
+                    const img = new Image();
+                    const dataUrl = canvas.toDataURL('image/png');
+                    
+                    img.onload = function() {
+                        loadedCount++;
+                        console.log('✅ تم تحميل صورة', loadedCount, 'من', canvases.length);
+                        
+                        // عندما تحمّل جميع الصور
+                        if (loadedCount === canvases.length) {
+                            console.log('✅ جميع الصور جاهزة - فتح نافذة الطباعة');
+                            setTimeout(function() {
+                                window.print();
+                                
+                                // إعادة Canvas بعد الطباعة
+                                setTimeout(function() {
+                                    console.log('🔄 إعادة الرسومات الأصلية...');
+                                    for (let j = 0; j < images.length; j++) {
+                                        images[j].canvas.style.display = 'block';
+                                        if (images[j].img.parentNode) {
+                                            images[j].img.parentNode.removeChild(images[j].img);
+                                        }
+                                    }
+                                    console.log('✅ تمت العملية');
+                                }, 100);
+                            }, 500);
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        console.error('❌ فشل تحميل صورة', i);
+                        loadedCount++;
+                    };
+                    
+                    img.src = dataUrl;
                     img.style.maxWidth = '100%';
                     img.style.height = 'auto';
                     img.style.display = 'block';
@@ -1946,26 +1981,6 @@
                     console.error('❌ خطأ في تحويل Canvas', i, ':', e);
                 }
             }
-            
-            console.log('✅ تم تحويل', images.length, 'رسم بياني');
-            
-            // الطباعة
-            setTimeout(function() {
-                console.log('📄 فتح نافذة الطباعة...');
-                window.print();
-                
-                // إعادة Canvas وحذف الصور
-                setTimeout(function() {
-                    console.log('🔄 إعادة الرسومات الأصلية...');
-                    for (let i = 0; i < images.length; i++) {
-                        images[i].canvas.style.display = 'block';
-                        if (images[i].img.parentNode) {
-                            images[i].img.parentNode.removeChild(images[i].img);
-                        }
-                    }
-                    console.log('✅ تمت العملية');
-                }, 100);
-            }, 1000); // زيادة الوقت إلى 1 ثانية
         }
 
         function exportPDF() {
@@ -1975,42 +1990,83 @@
                 return;
             }
             
+            console.log('📥 بدء تصدير PDF...');
+            
             // تحويل Canvas إلى صور أولاً
             const canvases = element.getElementsByTagName('canvas');
+            console.log('عدد Canvas:', canvases.length);
+            
+            if (canvases.length === 0) {
+                console.warn('⚠️ لا توجد رسومات بيانية!');
+                exportPDFNow(element);
+                return;
+            }
+            
             const images = [];
+            let loadedCount = 0;
             
             for (let i = 0; i < canvases.length; i++) {
                 const canvas = canvases[i];
-                const img = document.createElement('img');
-                img.src = canvas.toDataURL('image/png');
-                img.style.maxWidth = '100%';
-                img.style.height = 'auto';
                 
-                canvas.style.display = 'none';
-                canvas.parentNode.insertBefore(img, canvas);
-                images.push({ canvas: canvas, img: img });
+                try {
+                    const img = new Image();
+                    const dataUrl = canvas.toDataURL('image/png', 1.0);
+                    
+                    <!DOCTYPE html>img.onload = function() {
+                        loadedCount++;
+                        console.log('✅ تم تحميل صورة', loadedCount, 'من', canvases.length);
+                        
+                        // عندما تحمّل جميع الصور
+                        if (loadedCount === canvases.length) {
+                            console.log('✅ جميع الصور جاهزة - بدء التصدير');
+                            setTimeout(function() {
+                                exportPDFNow(element, images);
+                            }, 500);
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        console.error('❌ فشل تحميل صورة', i);
+                        loadedCount++;
+                    };
+                    
+                    img.src = dataUrl;
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                    
+                    canvas.style.display = 'none';
+                    canvas.parentNode.insertBefore(img, canvas);
+                    images.push({ canvas: canvas, img: img });
+                } catch(e) {
+                    console.error('❌ خطأ في تحويل Canvas', i, ':', e);
+                }
             }
+        }
+        
+        function exportPDFNow(element, images) {
+            const opt = {
+                margin: 10,
+                filename: 'تقرير_' + data.school + '_' + data.latestYear + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
             
-            // تصدير PDF
-            setTimeout(function() {
-                const opt = {
-                    margin: 10,
-                    filename: 'تقرير_' + data.school + '_' + data.latestYear + '.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-                
-                html2pdf().set(opt).from(element).save().then(function() {
-                    // إعادة Canvas بعد التصدير
+            html2pdf().set(opt).from(element).save().then(function() {
+                console.log('✅ تم التصدير');
+                // إعادة Canvas بعد التصدير
+                if (images) {
                     for (let i = 0; i < images.length; i++) {
                         images[i].canvas.style.display = 'block';
                         if (images[i].img.parentNode) {
                             images[i].img.parentNode.removeChild(images[i].img);
                         }
                     }
-                });
-            }, 500);
+                }
+            }).catch(function(error) {
+                console.error('❌ خطأ في التصدير:', error);
+                alert('حدث خطأ أثناء التصدير. الرجاء المحاولة مرة أخرى.');
+            });
         }
     </script>
 </body>
