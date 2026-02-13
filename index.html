@@ -1965,17 +1965,54 @@
                 return;
             }
             
-            // إنشاء نافذة معاينة
-            const printWindow = window.open('', '_blank', 'width=900,height=800');
+            // إنشاء HTML كامل للتقرير
+            const htmlContent = createPrintableHTML(reportContent);
             
-            if (!printWindow) {
-                alert('⚠️ الرجاء السماح بفتح النوافذ المنبثقة');
-                return;
+            // تحميل كملف HTML
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'تقرير_نافس_' + data.school + '_' + data.latestYear + '.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // رسالة للمستخدم
+            setTimeout(function() {
+                alert('✅ تم تحميل التقرير!\n\n📝 يمكنك:\n• فتح الملف في المتصفح\n• طباعته (Ctrl+P)\n• حفظه كـ PDF من المتصفح');
+            }, 300);
+        }
+
+        function exportPDF() {
+            // نفس الشيء - نحمل HTML ثم المستخدم يحفظه كـ PDF
+            printReport();
+        }
+        
+        function createPrintableHTML(reportContent) {
+            // نسخ الرسومات كصور
+            const container = reportContent.cloneNode(true);
+            const canvases = container.getElementsByTagName('canvas');
+            
+            for (let i = canvases.length - 1; i >= 0; i--) {
+                const canvas = canvases[i];
+                const originalCanvas = reportContent.getElementsByTagName('canvas')[i];
+                
+                if (originalCanvas && originalCanvas.width > 0) {
+                    try {
+                        const img = document.createElement('img');
+                        img.src = originalCanvas.toDataURL('image/png');
+                        img.style.maxWidth = '100%';
+                        img.style.height = 'auto';
+                        canvas.parentNode.replaceChild(img, canvas);
+                    } catch(e) {
+                        console.error('خطأ في تحويل Canvas:', e);
+                    }
+                }
             }
             
-            // بناء HTML للمعاينة
-            const html = `
-<!DOCTYPE html>
+            return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -1985,57 +2022,58 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
+            padding: 40px;
             background: #f5f5f5;
         }
-        .print-container {
-            max-width: 800px;
+        .container {
+            max-width: 900px;
             margin: 0 auto;
             background: white;
-            padding: 40px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 50px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
         }
-        .print-header {
+        .report-header {
             text-align: center;
             border-bottom: 3px solid #4472C4;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            padding-bottom: 30px;
+            margin-bottom: 40px;
         }
-        .print-header h1 {
+        .report-header h1 {
             color: #4472C4;
-            font-size: 2em;
-            margin-bottom: 10px;
+            font-size: 2.2em;
+            margin-bottom: 15px;
         }
         .report-stats {
             display: flex;
             justify-content: space-around;
-            margin: 30px 0;
+            margin: 40px 0;
             gap: 20px;
         }
         .report-stat {
             text-align: center;
-            padding: 20px;
+            padding: 25px;
             background: #f8f9fa;
-            border-radius: 10px;
+            border-radius: 12px;
             flex: 1;
         }
         .report-stat h2 {
             color: #4472C4;
-            font-size: 2.5em;
+            font-size: 3em;
             margin-bottom: 10px;
         }
         .report-stat h3 {
             color: #666;
-            font-size: 1.2em;
+            font-size: 1.3em;
+            margin-bottom: 5px;
         }
         .report-stat p {
             color: #999;
-            margin-top: 5px;
+            font-size: 0.9em;
         }
         .strengths-box, .weaknesses-box, .recommendations-box {
-            margin: 25px 0;
-            padding: 20px;
-            border-radius: 10px;
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 12px;
         }
         .strengths-box {
             background: #d4edda;
@@ -2050,82 +2088,63 @@
             border: 2px solid #ffc107;
         }
         .strengths-box h3, .weaknesses-box h3, .recommendations-box h3 {
-            margin-bottom: 15px;
-            font-size: 1.3em;
+            margin-bottom: 20px;
+            font-size: 1.5em;
         }
         ul, ol {
-            margin-right: 25px;
-            line-height: 1.8;
+            margin-right: 30px;
+            line-height: 2;
         }
         li {
-            margin: 10px 0;
+            margin: 12px 0;
+            font-size: 1.05em;
         }
-        .chart-placeholder {
-            background: #e9ecef;
-            padding: 40px;
+        .chart-container {
+            margin: 30px 0;
             text-align: center;
-            margin: 20px 0;
-            border-radius: 10px;
-            border: 2px dashed #6c757d;
         }
-        .chart-placeholder h3 {
-            color: #6c757d;
-            margin-bottom: 10px;
+        .chart-container img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
         }
-        .chart-placeholder p {
-            color: #999;
-            font-size: 0.9em;
+        h3 {
+            color: #4472C4;
+            margin: 25px 0 15px 0;
         }
-        .print-actions {
+        .print-btn {
             position: fixed;
             top: 20px;
             left: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-        }
-        .print-actions button {
             background: #4472C4;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 15px 30px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1em;
-            margin: 5px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
         }
-        .print-actions button:hover {
+        .print-btn:hover {
             background: #2c5282;
         }
         @media print {
             body { background: white; padding: 0; }
-            .print-container { box-shadow: none; padding: 20px; }
-            .print-actions { display: none; }
-            .chart-placeholder { page-break-inside: avoid; }
+            .container { box-shadow: none; padding: 20px; }
+            .print-btn { display: none; }
         }
     </style>
 </head>
 <body>
-    <div class="print-actions">
-        <button onclick="window.print()">🖨️ طباعة</button>
-        <button onclick="window.close()">❌ إغلاق</button>
-    </div>
-    
-    <div class="print-container">
-        ${reportContent.innerHTML}
+    <button class="print-btn" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+    <div class="container">
+        ${container.innerHTML}
     </div>
 </body>
 </html>`;
-            
-            printWindow.document.write(html);
-            printWindow.document.close();
-        }
-
-        function exportPDF() {
-            alert('💡 نصيحة: اضغط "🖨️ طباعة" ثم اختر "حفظ كـ PDF" من المتصفح');
-            printReport();
         }
     </script>
 </body>
