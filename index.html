@@ -1558,11 +1558,125 @@
             html += '</div>';
 
             document.getElementById('reportContent').innerHTML = html;
-            document.getElementById('reportPreview').innerHTML = html;
+            
+            // نسخة للعرض (بدون canvas - سنضع صور لاحقاً)
+            let previewHtml = html.replace('id="reportChart1"', 'id="previewChart1"')
+                                  .replace('id="reportChart2"', 'id="previewChart2"');
+            document.getElementById('reportPreview').innerHTML = previewHtml;
 
             setTimeout(function() {
                 drawReportCharts(filtered);
+                drawPreviewCharts(filtered);
             }, 100);
+        }
+        
+        function drawPreviewCharts(filtered) {
+            // رسم نسخة للعرض في التبويب
+            const ctx1 = document.getElementById('previewChart1');
+            const ctx2 = document.getElementById('previewChart2');
+            
+            if (!ctx1 || !ctx2) return;
+            
+            // استخدام نفس منطق drawReportCharts
+            const schoolsSet = new Set();
+            for (let i = 0; i < filtered.length; i++) {
+                const schoolName = filtered[i]['اسم المدرسة'] || filtered[i]['المدرسة'];
+                if (schoolName) schoolsSet.add(schoolName);
+            }
+            const isMultipleSchools = schoolsSet.size > 1;
+            
+            const subjects = data.subject === 'all' ? ['الرياضيات', 'القراءة', 'العلوم'] : [data.subject];
+            const schoolData = [];
+            const deptData = [];
+
+            for (let i = 0; i < subjects.length; i++) {
+                const subject = subjects[i];
+                
+                if (isMultipleSchools) {
+                    const subjectData = filtered.filter(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    let totalStudents = 0;
+                    let totalProficient = 0;
+                    let sumDept = 0;
+                    let count = 0;
+                    
+                    for (let j = 0; j < subjectData.length; j++) {
+                        totalStudents += subjectData[j]['مجموع المختبرين'] || 0;
+                        totalProficient += subjectData[j]['مجموع المتقنين'] || 0;
+                        sumDept += subjectData[j]['المتوسط على مستوى إدارة التعليم'] || 0;
+                        count++;
+                    }
+                    
+                    if (totalStudents > 0) {
+                        schoolData.push((totalProficient / totalStudents) * 100);
+                        deptData.push(count > 0 ? sumDept / count : 0);
+                    }
+                } else {
+                    const s = filtered.find(r => r['المجال'] === subject && r['المجال الفرعي'] === subject);
+                    if (s) {
+                        schoolData.push(s['نسبة المتقنين'] || 0);
+                        deptData.push(s['المتوسط على مستوى إدارة التعليم'] || 0);
+                    }
+                }
+            }
+
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: subjects,
+                    datasets: [
+                        { label: 'المدرسة', data: schoolData, backgroundColor: '#4472C4' },
+                        { label: 'الإدارة', data: deptData, backgroundColor: '#ffc107' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'المقارنة مع الإدارة' } },
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+
+            const domains = {};
+            for (let i = 0; i < filtered.length; i++) {
+                const r = filtered[i];
+                const d = r['المجال الفرعي'];
+                if (d !== r['المجال']) {
+                    if (!domains[d]) domains[d] = [];
+                    domains[d].push(r['نسبة المتقنين'] || 0);
+                }
+            }
+
+            const labels = Object.keys(domains);
+            const values = [];
+            for (let i = 0; i < labels.length; i++) {
+                values.push(avg(domains[labels[i]]));
+            }
+
+            const bgColors = [];
+            for (let i = 0; i < values.length; i++) {
+                if (values[i] >= 60) bgColors.push('#28a745');
+                else if (values[i] >= 40) bgColors.push('#ffc107');
+                else bgColors.push('#dc3545');
+            }
+
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'نسبة الإتقان',
+                        data: values,
+                        backgroundColor: bgColors
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'المجالات الفرعية' } },
+                    scales: { x: { beginAtZero: true, max: 100 } }
+                }
+            });
         }
 
         function analyzeData(filtered, subjects, targetMap, isMultipleSchools) {
@@ -1798,38 +1912,60 @@
                 return;
             }
             
+            console.log('🖨️ بدء عملية الطباعة...');
+            
             // تحويل جميع Canvas إلى صور
             const canvases = reportContent.getElementsByTagName('canvas');
+            console.log('عدد Canvas:', canvases.length);
+            
+            if (canvases.length === 0) {
+                console.warn('⚠️ لا توجد رسومات بيانية!');
+            }
+            
             const images = [];
             
             for (let i = 0; i < canvases.length; i++) {
                 const canvas = canvases[i];
-                const img = document.createElement('img');
-                img.src = canvas.toDataURL('image/png');
-                img.style.maxWidth = '100%';
-                img.style.height = 'auto';
-                img.className = 'chart-print-image';
+                console.log('Canvas', i, '- Width:', canvas.width, 'Height:', canvas.height);
                 
-                // إخفاء Canvas وإظهار الصورة
-                canvas.style.display = 'none';
-                canvas.parentNode.insertBefore(img, canvas);
-                images.push({ canvas: canvas, img: img });
+                try {
+                    const img = document.createElement('img');
+                    img.src = canvas.toDataURL('image/png');
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                    img.style.display = 'block';
+                    img.className = 'chart-print-image';
+                    
+                    console.log('✅ تم تحويل Canvas', i, 'إلى صورة');
+                    
+                    // إخفاء Canvas وإظهار الصورة
+                    canvas.style.display = 'none';
+                    canvas.parentNode.insertBefore(img, canvas);
+                    images.push({ canvas: canvas, img: img });
+                } catch(e) {
+                    console.error('❌ خطأ في تحويل Canvas', i, ':', e);
+                }
             }
+            
+            console.log('✅ تم تحويل', images.length, 'رسم بياني');
             
             // الطباعة
             setTimeout(function() {
+                console.log('📄 فتح نافذة الطباعة...');
                 window.print();
                 
                 // إعادة Canvas وحذف الصور
                 setTimeout(function() {
+                    console.log('🔄 إعادة الرسومات الأصلية...');
                     for (let i = 0; i < images.length; i++) {
                         images[i].canvas.style.display = 'block';
                         if (images[i].img.parentNode) {
                             images[i].img.parentNode.removeChild(images[i].img);
                         }
                     }
+                    console.log('✅ تمت العملية');
                 }, 100);
-            }, 500);
+            }, 1000); // زيادة الوقت إلى 1 ثانية
         }
 
         function exportPDF() {
