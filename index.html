@@ -505,7 +505,7 @@
         </div>
 
         <!-- منطقة رفع الملف -->
-        <div class="card no-print" id="uploadCard">
+        <div class="card no-print" id="uploadCard" style="display: none;">
             <h2 style="color: #4472C4; margin-bottom: 25px; text-align: center;">📁 ارفع ملف نافس</h2>
             
             <div class="alert alert-info">
@@ -524,6 +524,13 @@
 
             <div class="spinner" id="spinner"></div>
             <div id="status"></div>
+        </div>
+        
+        <!-- زر تحميل ملف مختلف -->
+        <div class="card no-print" id="uploadButton" style="display: none; text-align: center;">
+            <button class="btn" onclick="showUploadArea()" style="font-size: 1.1em; padding: 12px 30px;">
+                📁 تحميل ملف مختلف
+            </button>
         </div>
 
         <!-- لوحة المعلومات -->
@@ -603,7 +610,82 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadTargets();
             setupFileUpload();
+            autoLoadData(); // تحميل تلقائي لقاعدة البيانات
         });
+        
+        function autoLoadData() {
+            showStatus('⏳ جاري تحميل قاعدة البيانات...', 'info');
+            
+            // تحميل الملف من المستودع
+            fetch('data.xlsx')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('فشل تحميل قاعدة البيانات');
+                    }
+                    return response.arrayBuffer();
+                })
+                .then(buffer => {
+                    const wb = XLSX.read(buffer);
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet);
+                    
+                    if (!rows.length) {
+                        throw new Error('قاعدة البيانات فارغة');
+                    }
+                    
+                    data.raw = rows;
+                    
+                    // التعرف على عدد المدارس
+                    const schoolsSet = new Set();
+                    for (let i = 0; i < rows.length; i++) {
+                        const schoolName = rows[i]['اسم المدرسة'] || rows[i]['المدرسة'];
+                        if (schoolName) schoolsSet.add(schoolName);
+                    }
+                    const schoolsCount = schoolsSet.size;
+                    
+                    if (schoolsCount === 1) {
+                        data.school = Array.from(schoolsSet)[0];
+                    } else if (schoolsCount > 1) {
+                        data.school = 'قاعدة بيانات (' + schoolsCount + ' مدرسة)';
+                    } else {
+                        data.school = 'قاعدة بيانات نافس';
+                    }
+                    
+                    const years = [...new Set(rows.map(r => r['العام الدراسي - ميلادي']))].filter(Boolean).sort();
+                    data.latestYear = years[years.length - 1];
+                    data.previousYear = years.length > 1 ? years[years.length - 2] : null;
+                    
+                    populateSelects();
+                    populateSchoolsList();
+                    showDashboard();
+                    showComparison();
+                    showControls();
+                    showMain();
+                    updateView();
+                    
+                    if (schoolsCount === 1) {
+                        showStatus('✅ تم تحميل نتائج ' + data.school + ' للعام ' + data.latestYear, 'success');
+                    } else if (schoolsCount > 1) {
+                        showStatus('✅ تم تحميل ' + schoolsCount + ' مدرسة - اختر مدرسة محددة من القائمة', 'success');
+                    }
+                    
+                    // إخفاء منطقة الرفع وإظهار زر التحميل
+                    document.getElementById('uploadCard').style.display = 'none';
+                    document.getElementById('uploadButton').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('خطأ في تحميل قاعدة البيانات:', error);
+                    showStatus('⚠️ تعذر تحميل قاعدة البيانات تلقائياً - يمكنك رفع ملف يدوياً', 'warning');
+                    // إظهار منطقة الرفع
+                    document.getElementById('uploadCard').style.display = 'block';
+                    document.getElementById('uploadButton').style.display = 'none';
+                });
+        }
+        
+        function showUploadArea() {
+            document.getElementById('uploadCard').style.display = 'block';
+            document.getElementById('uploadButton').style.display = 'none';
+        }
 
         function saveTargets() {
             data.targets.math = parseFloat(document.getElementById('targetMath').value) || 50;
@@ -1738,7 +1820,7 @@
             setTimeout(function() {
                 window.print();
                 
-                <!DOCTYPE html>// إعادة Canvas وحذف الصور
+                // إعادة Canvas وحذف الصور
                 setTimeout(function() {
                     for (let i = 0; i < images.length; i++) {
                         images[i].canvas.style.display = 'block';
