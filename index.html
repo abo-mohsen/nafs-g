@@ -239,7 +239,7 @@ function drawInteractive(f,bd){
     var x2=document.getElementById('c2');
     if(x2)D.charts.c2=new Chart(x2,{type:'bar',data:{labels:lbl,datasets:[{label:'نسبة الإتقان (%)',data:vals,backgroundColor:bgC}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{beginAtZero:true,max:100}}}});
     // Levels
-    var h=[],m=[],l=[],vl=[];for(var i=0;i<f.length;i++){h.push(f[i]['نسبة الطلاب في مستوى الأداء المرتفع']||0);m.push(f[i]['نسبة الطلاب في مستوى الأداء المتوسط']||0);l.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض']||0);vl.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض جدا']||0)}
+    var h=[],m=[],l=[],vl=[];for(var i=0;i<f.length;i++){var hv=parseFloat(f[i]['نسبة الطلاب في مستوى الأداء المرتفع'])||0;var mv=parseFloat(f[i]['نسبة الطلاب في مستوى الأداء المتوسط'])||0;var lv=parseFloat(f[i]['نسبة الطلاب في مستوى الأداء المنخفض'])||0;var vlv=parseFloat(f[i]['نسبة الطلاب في مستوى الأداء المنخفض جدا'])||0;if(hv>0||mv>0||lv>0||vlv>0){h.push(hv);m.push(mv);l.push(lv);vl.push(vlv)}}
     if(D.charts.c3)D.charts.c3.destroy();
     var x3=document.getElementById('c3');
     if(x3)D.charts.c3=new Chart(x3,{type:'doughnut',data:{labels:['مرتفع','متوسط','منخفض','منخفض جداً'],datasets:[{data:[avg(h),avg(m),avg(l),avg(vl)],backgroundColor:['#28a745','#36a2eb','#ffce56','#dc3545']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
@@ -280,7 +280,8 @@ function drawDoughnutManual(values,labels,colors,title){
     ctx.fillText(title,cx,35);
     // Calculate total
     var total=0;for(var i=0;i<values.length;i++)total+=values[i];
-    if(total===0){ctx.fillStyle='#999';ctx.font='18px Tajawal, sans-serif';ctx.fillText('لا توجد بيانات',cx,cy);return c.toDataURL('image/png',1.0)}
+    console.log('Doughnut values:',values,'total:',total);
+    if(!total||total<=0){ctx.fillStyle='#999';ctx.font='18px Tajawal, sans-serif';ctx.fillText('لا توجد بيانات',cx,cy);return c.toDataURL('image/png',1.0)}
     // Draw slices
     var startAngle=-Math.PI/2;
     for(var i=0;i<values.length;i++){
@@ -339,8 +340,17 @@ async function generateReport(bd){
     var img2=await renderChartToImage({type:'bar',data:{labels:lbl,datasets:[{label:'نسبة الإتقان',data:vals,backgroundColor:bgC}]},options:{indexAxis:'y',plugins:{title:{display:true,text:'المجالات الفرعية',font:{size:18}}},scales:{x:{beginAtZero:true,max:100}}}},800,Math.max(350,lbl.length*50+100));
 
     // Levels doughnut chart - MANUAL DRAWING (Chart.js doughnut fails in hidden elements)
+    // Use ld (all latest year data, not filtered by subject) for level distribution
     var h=[],m=[],l=[],vl=[];
-    for(var i=0;i<f.length;i++){h.push(f[i]['نسبة الطلاب في مستوى الأداء المرتفع']||0);m.push(f[i]['نسبة الطلاب في مستوى الأداء المتوسط']||0);l.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض']||0);vl.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض جدا']||0)}
+    for(var i=0;i<ld.length;i++){
+        var rv=ld[i];
+        var hv=parseFloat(rv['نسبة الطلاب في مستوى الأداء المرتفع'])||0;
+        var mv=parseFloat(rv['نسبة الطلاب في مستوى الأداء المتوسط'])||0;
+        var lv=parseFloat(rv['نسبة الطلاب في مستوى الأداء المنخفض'])||0;
+        var vlv=parseFloat(rv['نسبة الطلاب في مستوى الأداء المنخفض جدا'])||0;
+        if(hv>0||mv>0||lv>0||vlv>0){h.push(hv);m.push(mv);l.push(lv);vl.push(vlv)}
+    }
+    console.log('Doughnut data - records with levels:',h.length,'avg high:',avg(h),'avg med:',avg(m),'avg low:',avg(l),'avg vlow:',avg(vl));
     var img3=drawDoughnutManual([avg(h),avg(m),avg(l),avg(vl)],['مرتفع','متوسط','منخفض','منخفض جداً'],['#28a745','#36a2eb','#ffce56','#dc3545'],'توزيع مستويات الأداء');
 
     // Trend chart
