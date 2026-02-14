@@ -285,6 +285,17 @@ async function generateReport(bd){
     var lbl=Object.keys(doms),vals=lbl.map(function(l){return avg(doms[l])}),bgC=vals.map(function(v){return v>=60?'#28a745':v>=40?'#ffc107':'#dc3545'});
     var img2=await renderChartToImage({type:'bar',data:{labels:lbl,datasets:[{label:'نسبة الإتقان',data:vals,backgroundColor:bgC}]},options:{indexAxis:'y',plugins:{title:{display:true,text:'المجالات الفرعية',font:{size:18}}},scales:{x:{beginAtZero:true,max:100}}}},800,Math.max(350,lbl.length*50+100));
 
+    // Levels doughnut chart
+    var h=[],m=[],l=[],vl=[];
+    for(var i=0;i<f.length;i++){h.push(f[i]['نسبة الطلاب في مستوى الأداء المرتفع']||0);m.push(f[i]['نسبة الطلاب في مستوى الأداء المتوسط']||0);l.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض']||0);vl.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض جدا']||0)}
+    var img3=await renderChartToImage({type:'doughnut',data:{labels:['مرتفع','متوسط','منخفض','منخفض جداً'],datasets:[{data:[avg(h),avg(m),avg(l),avg(vl)],backgroundColor:['#28a745','#36a2eb','#ffce56','#dc3545']}]},options:{plugins:{title:{display:true,text:'توزيع مستويات الأداء',font:{size:18}},legend:{position:'bottom',labels:{font:{size:14}}}}}},600,450);
+
+    // Trend chart
+    var yrs=[...new Set(bd.map(function(r){return r['العام الدراسي - ميلادي']}))].filter(Boolean).sort();
+    var colors={'الرياضيات':'#4472C4','القراءة':'#28a745','العلوم':'#ffc107'},tds=[];
+    for(var s=0;s<subjs.length;s++){var v=yrs.map(function(y){return getSD(bd,subjs[s],y).perf});tds.push({label:subjs[s],data:v,borderColor:colors[subjs[s]],backgroundColor:colors[subjs[s]]+'20',borderWidth:3,tension:.3,fill:true})}
+    var img4=yrs.length>1?await renderChartToImage({type:'line',data:{labels:yrs,datasets:tds},options:{plugins:{title:{display:true,text:'تطور الأداء عبر السنوات',font:{size:18}}},scales:{y:{beginAtZero:true,max:100}}}},800,400):null;
+
     // Build report HTML with IMG tags only
     var html='<div id="reportForPDF">';
     html+='<div class="report-section"><div class="report-header"><h1>'+D.school+'</h1><h2>تقرير نتائج نافس الوطنية</h2><h3>العام الدراسي: '+D.latestYear+'</h3></div>';
@@ -298,6 +309,8 @@ async function generateReport(bd){
     html+='<div class="report-section"><h3 style="color:#4472C4;text-align:center;margin-bottom:20px">📊 الرسومات البيانية</h3>';
     if(img1)html+='<div style="background:#f9f9f9;border-radius:10px;padding:15px;margin:15px 0;text-align:center"><img class="report-chart-img" src="'+img1+'" alt="chart1"></div>';
     if(img2)html+='<div style="background:#f9f9f9;border-radius:10px;padding:15px;margin:15px 0;text-align:center"><img class="report-chart-img" src="'+img2+'" alt="chart2"></div>';
+    if(img3)html+='<div style="background:#f9f9f9;border-radius:10px;padding:15px;margin:15px 0;text-align:center"><img class="report-chart-img" src="'+img3+'" alt="chart3" style="max-width:500px"></div>';
+    if(img4)html+='<div style="background:#f9f9f9;border-radius:10px;padding:15px;margin:15px 0;text-align:center"><img class="report-chart-img" src="'+img4+'" alt="chart4"></div>';
     html+='</div></div>';
     document.getElementById('reportPreview').innerHTML=html;
 }
