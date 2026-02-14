@@ -268,6 +268,57 @@ function analyze(f,subjs,tm,isM){
     return{strengths:st,weaknesses:wk,recommendations:rc};
 }
 
+/* === MANUAL DOUGHNUT DRAWING (bypasses Chart.js hidden element bug) === */
+function drawDoughnutManual(values,labels,colors,title){
+    var size=600,cx=size/2,cy=240,radius=140,innerRadius=80;
+    var c=document.createElement('canvas');c.width=size;c.height=size;
+    var ctx=c.getContext('2d');
+    // White background
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,size,size);
+    // Title
+    ctx.fillStyle='#333';ctx.font='bold 22px Tajawal, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(title,cx,35);
+    // Calculate total
+    var total=0;for(var i=0;i<values.length;i++)total+=values[i];
+    if(total===0){ctx.fillStyle='#999';ctx.font='18px Tajawal, sans-serif';ctx.fillText('لا توجد بيانات',cx,cy);return c.toDataURL('image/png',1.0)}
+    // Draw slices
+    var startAngle=-Math.PI/2;
+    for(var i=0;i<values.length;i++){
+        var sliceAngle=(values[i]/total)*2*Math.PI;
+        ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,radius,startAngle,startAngle+sliceAngle);ctx.closePath();
+        ctx.fillStyle=colors[i];ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.stroke();
+        // Draw percentage text on slice
+        if(values[i]/total>0.05){
+            var midAngle=startAngle+sliceAngle/2;
+            var textR=radius*0.7;
+            var tx=cx+Math.cos(midAngle)*textR;
+            var ty=cy+Math.sin(midAngle)*textR;
+            ctx.fillStyle='#fff';ctx.font='bold 16px Tajawal, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+            ctx.fillText((values[i]).toFixed(1)+'%',tx,ty);
+        }
+        startAngle+=sliceAngle;
+    }
+    // Inner circle (doughnut hole)
+    ctx.beginPath();ctx.arc(cx,cy,innerRadius,0,2*Math.PI);ctx.fillStyle='#ffffff';ctx.fill();
+    // Center text
+    ctx.fillStyle='#4472C4';ctx.font='bold 20px Tajawal, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('الأداء',cx,cy-10);
+    ctx.fillStyle='#666';ctx.font='14px Tajawal, sans-serif';
+    ctx.fillText('توزيع النسب',cx,cy+15);
+    // Legend at bottom
+    var legendY=cy+radius+40;var legendX=cx;var spacing=130;var startX=legendX-((labels.length-1)*spacing)/2;
+    for(var i=0;i<labels.length;i++){
+        var lx=startX+i*spacing;
+        // Color circle
+        ctx.beginPath();ctx.arc(lx-30,legendY,8,0,2*Math.PI);ctx.fillStyle=colors[i];ctx.fill();
+        // Label text
+        ctx.fillStyle='#333';ctx.font='14px Tajawal, sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+        ctx.fillText(labels[i]+' ('+values[i].toFixed(1)+'%)',lx+40,legendY);
+    }
+    return c.toDataURL('image/png',1.0);
+}
+
 /* === REPORT GENERATION (Tab 1) - Charts as IMAGES === */
 async function generateReport(bd){
     if(!bd)bd=D.raw;
@@ -287,10 +338,10 @@ async function generateReport(bd){
     var lbl=Object.keys(doms),vals=lbl.map(function(l){return avg(doms[l])}),bgC=vals.map(function(v){return v>=60?'#28a745':v>=40?'#ffc107':'#dc3545'});
     var img2=await renderChartToImage({type:'bar',data:{labels:lbl,datasets:[{label:'نسبة الإتقان',data:vals,backgroundColor:bgC}]},options:{indexAxis:'y',plugins:{title:{display:true,text:'المجالات الفرعية',font:{size:18}}},scales:{x:{beginAtZero:true,max:100}}}},800,Math.max(350,lbl.length*50+100));
 
-    // Levels doughnut chart
+    // Levels doughnut chart - MANUAL DRAWING (Chart.js doughnut fails in hidden elements)
     var h=[],m=[],l=[],vl=[];
     for(var i=0;i<f.length;i++){h.push(f[i]['نسبة الطلاب في مستوى الأداء المرتفع']||0);m.push(f[i]['نسبة الطلاب في مستوى الأداء المتوسط']||0);l.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض']||0);vl.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض جدا']||0)}
-    var img3=await renderChartToImage({type:'doughnut',data:{labels:['مرتفع','متوسط','منخفض','منخفض جداً'],datasets:[{data:[avg(h),avg(m),avg(l),avg(vl)],backgroundColor:['#28a745','#36a2eb','#ffce56','#dc3545'],borderWidth:2,borderColor:'#fff'}]},options:{layout:{padding:20},plugins:{title:{display:true,text:'توزيع مستويات الأداء',font:{size:20,family:'Tajawal'},padding:{bottom:15}},legend:{position:'bottom',labels:{font:{size:14,family:'Tajawal'},padding:15,usePointStyle:true}}}}},500,500);
+    var img3=drawDoughnutManual([avg(h),avg(m),avg(l),avg(vl)],['مرتفع','متوسط','منخفض','منخفض جداً'],['#28a745','#36a2eb','#ffce56','#dc3545'],'توزيع مستويات الأداء');
 
     // Trend chart
     var yrs=[...new Set(bd.map(function(r){return r['العام الدراسي - ميلادي']}))].filter(Boolean).sort();
