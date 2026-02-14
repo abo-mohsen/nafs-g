@@ -120,28 +120,30 @@ function switchTab(i){var t=document.querySelectorAll('.tab'),c=document.querySe
 function renderChartToImage(cfg,w,h){
     return new Promise(function(resolve){
         var factory=document.getElementById('chartFactory');
-        // Clear factory
         factory.innerHTML='';
+        var cw=w||800,ch=h||400;
+        // Make factory visible with exact dimensions so Chart.js can measure
+        factory.style.cssText='position:fixed;left:0;top:0;width:'+cw+'px;height:'+ch+'px;opacity:0;pointer-events:none;z-index:-1;overflow:hidden;';
+        var wrapper=document.createElement('div');
+        wrapper.style.cssText='width:'+cw+'px;height:'+ch+'px;position:relative;';
         var c=document.createElement('canvas');
-        c.width=w||800;c.height=h||400;
-        c.style.width=(w||800)+'px';
-        c.style.height=(h||400)+'px';
-        factory.appendChild(c);
-        // Force no animation
+        wrapper.appendChild(c);
+        factory.appendChild(wrapper);
+        // Use responsive mode so Chart.js fills the wrapper
         cfg.options=cfg.options||{};
         cfg.options.animation=false;
-        cfg.options.responsive=false;
+        cfg.options.responsive=true;
         cfg.options.maintainAspectRatio=false;
         cfg.options.devicePixelRatio=2;
-        var chart=new Chart(c.getContext('2d'),cfg);
-        // Wait for render
+        var chart=new Chart(c,cfg);
         setTimeout(function(){
             var imgData='';
             try{imgData=c.toDataURL('image/png',1.0)}catch(e){console.error('toDataURL error',e)}
             chart.destroy();
             factory.innerHTML='';
+            factory.style.cssText='position:fixed;left:-9999px;top:0;width:800px;height:600px;pointer-events:none;opacity:0;';
             resolve(imgData);
-        },600);
+        },800);
     });
 }
 
@@ -288,7 +290,7 @@ async function generateReport(bd){
     // Levels doughnut chart
     var h=[],m=[],l=[],vl=[];
     for(var i=0;i<f.length;i++){h.push(f[i]['نسبة الطلاب في مستوى الأداء المرتفع']||0);m.push(f[i]['نسبة الطلاب في مستوى الأداء المتوسط']||0);l.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض']||0);vl.push(f[i]['نسبة الطلاب في مستوى الأداء المنخفض جدا']||0)}
-    var img3=await renderChartToImage({type:'doughnut',data:{labels:['مرتفع','متوسط','منخفض','منخفض جداً'],datasets:[{data:[avg(h),avg(m),avg(l),avg(vl)],backgroundColor:['#28a745','#36a2eb','#ffce56','#dc3545']}]},options:{plugins:{title:{display:true,text:'توزيع مستويات الأداء',font:{size:18}},legend:{position:'bottom',labels:{font:{size:14}}}}}},600,450);
+    var img3=await renderChartToImage({type:'doughnut',data:{labels:['مرتفع','متوسط','منخفض','منخفض جداً'],datasets:[{data:[avg(h),avg(m),avg(l),avg(vl)],backgroundColor:['#28a745','#36a2eb','#ffce56','#dc3545'],borderWidth:2,borderColor:'#fff'}]},options:{layout:{padding:20},plugins:{title:{display:true,text:'توزيع مستويات الأداء',font:{size:20,family:'Tajawal'},padding:{bottom:15}},legend:{position:'bottom',labels:{font:{size:14,family:'Tajawal'},padding:15,usePointStyle:true}}}}},500,500);
 
     // Trend chart
     var yrs=[...new Set(bd.map(function(r){return r['العام الدراسي - ميلادي']}))].filter(Boolean).sort();
