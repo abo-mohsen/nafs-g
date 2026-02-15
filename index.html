@@ -138,7 +138,7 @@ function getLevels(rows){
     }
     console.log('Level data: records='+hArr.length+' avgH='+avg(hArr).toFixed(1)+' avgM='+avg(mArr).toFixed(1)+' avgL='+avg(lArr).toFixed(1)+' avgVL='+avg(vlArr).toFixed(1));
     return{h:avg(hArr),m:avg(mArr),l:avg(lArr),vl:avg(vlArr),count:hArr.length};
-}}
+}
 function getSD(bd,subj,yr){
     var ld=bd.filter(function(r){return r['العام الدراسي - ميلادي']===yr});
     var ss=new Set();for(var i=0;i<bd.length;i++){var n=bd[i]['اسم المدرسة']||bd[i]['المدرسة'];if(n)ss.add(n)}
