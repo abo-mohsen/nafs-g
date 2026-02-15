@@ -120,93 +120,101 @@
         .change-arrow{font-size:1.2em}
         .ranking-section-full{margin:30px 0}
         .ranking-section-full .ranking-card{margin-bottom:0}
+        @media(max-width:900px){.ranking-grid{grid-template-columns:1fr}}
         .no-print{} /* placeholder */
         @media print{.no-print{display:none!important}}
-        
-        /* === RESPONSIVE - Tablets === */
+
+        /* === RESPONSIVE === */
+        /* Tablet */
         @media(max-width:1024px){
-            body{padding:15px}
+            body{padding:12px}
             .container{max-width:100%}
-            .card{padding:25px}
+            .card{padding:20px;margin-bottom:15px}
             .header{padding:30px 20px}
             .header h1{font-size:2em}
-            .dashboard{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px}
-            .targets-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-            .chart-container{height:350px;padding:15px}
+            .chart-container{height:350px;padding:15px;margin:20px 0}
+            .comparison-table th,.comparison-table td{padding:10px;font-size:.9em}
             .ranking-item{padding:10px 15px}
+            .rank-score{font-size:1.1em}
         }
-        
-        /* === RESPONSIVE - Mobile === */
+
+        /* Mobile */
         @media(max-width:768px){
-            body{padding:10px}
-            .header{padding:25px 15px;border-radius:12px;margin-bottom:20px}
-            .header h1{font-size:1.4em;line-height:1.4}
-            .header p{font-size:.95em}
-            .card{padding:18px;margin-bottom:15px;border-radius:12px}
+            body{padding:8px}
+            .header{padding:20px 15px;border-radius:10px;margin-bottom:15px}
+            .header h1{font-size:1.5em;line-height:1.4}
+            .header p{font-size:1em}
+            .card{padding:15px;border-radius:10px;margin-bottom:12px}
+            .targets-section{padding:15px}
+            .targets-grid{grid-template-columns:1fr;gap:12px}
+            .target-input{padding:15px}
             .dashboard{grid-template-columns:1fr;gap:12px}
-            .stat-card{padding:20px}
+            .stat-card{padding:18px}
             .stat-card h3{font-size:2em}
             .stat-card .comparison{font-size:.8em}
-            .targets-grid{grid-template-columns:1fr}
-            .target-input{padding:15px}
             .controls{grid-template-columns:1fr;gap:12px}
             .form-group select{padding:12px;font-size:1em}
+            .btn{padding:12px 20px;font-size:1em;margin:5px 3px;width:100%;text-align:center}
             .tabs{gap:6px;justify-content:center}
-            .tab{padding:10px 14px;font-size:.85em;border-radius:8px;flex:1;text-align:center;min-width:0}
-            .chart-container{height:300px;padding:12px;margin:20px 0}
-            .comparison-table{font-size:.85em}
-            .comparison-table th,.comparison-table td{padding:10px 6px}
-            .report-stats{grid-template-columns:1fr!important;gap:10px}
-            .report-stat h2{font-size:2em!important}
-            .report-header h1{font-size:1.3em}
-            .report-header h2{font-size:1.05em}
-            .strengths-box,.weaknesses-box,.recommendations-box{padding:15px}
+            .tab{padding:10px 14px;font-size:.9em;flex:1;text-align:center;min-width:0}
+            .chart-container{height:300px;padding:10px;margin:15px 0}
+            .report-stats{grid-template-columns:1fr;gap:10px}
+            .report-header h1{font-size:1.4em}
+            .report-header h2{font-size:1.1em}
+            .report-header h3{font-size:1em}
+            .strengths-box,.weaknesses-box,.recommendations-box{padding:15px;margin:12px 0}
             .strengths-box h3,.weaknesses-box h3,.recommendations-box h3{font-size:1.1em}
-            .strengths-box li,.weaknesses-box li,.recommendations-box li{font-size:.9em;padding:8px 0}
-            .btn{padding:12px 25px;font-size:1em;margin:6px 3px}
+            .strengths-box li,.weaknesses-box li,.recommendations-box li{padding:8px 0;font-size:.9em}
+            .comparison-table{font-size:.8em;display:block;overflow-x:auto;white-space:nowrap}
+            .comparison-table th,.comparison-table td{padding:8px 6px}
             .upload-area{padding:30px 15px}
-            .upload-icon{font-size:3.5em}
+            .upload-icon{font-size:3em;margin-bottom:10px}
             .upload-area h2{font-size:1.2em}
-            .alert{padding:15px;font-size:1em}
-            .ranking-grid{grid-template-columns:1fr!important;gap:15px}
             .ranking-header h2{font-size:1.3em}
+            .ranking-grid{grid-template-columns:1fr;gap:15px}
             .ranking-item{padding:10px 12px}
             .rank-num{width:30px;height:30px;font-size:.85em;margin-left:10px}
             .rank-name{font-size:.85em}
-            .rank-score{font-size:1.1em}
-            .rank-change{font-size:.85em;min-width:55px}
-            .ranking-filter-btn{padding:8px 18px;font-size:.9em}
-            .pdf-overlay-content{margin:20px;padding:25px}
-            #quickActions .btn{padding:10px 20px;font-size:.95em;display:block;margin:8px auto}
+            .rank-score{font-size:1.1em;margin-right:5px}
+            .rank-change{font-size:.8em;min-width:60px}
+            .rank-detail{font-size:.75em}
+            .ranking-card-header{padding:15px;font-size:1em}
+            .pdf-overlay-content{margin:15px;padding:25px}
+            .alert{padding:15px;font-size:1em}
         }
-        
-        /* === RESPONSIVE - Small Mobile === */
+
+        /* Small Mobile */
         @media(max-width:480px){
-            body{padding:6px}
-            .header{padding:18px 10px}
-            .header h1{font-size:1.15em}
-            .header p{font-size:.85em}
-            .card{padding:12px;border-radius:10px}
+            body{padding:5px}
+            .header{padding:15px 10px}
+            .header h1{font-size:1.25em}
+            .card{padding:12px;border-radius:8px}
             .stat-card h3{font-size:1.7em}
-            .stat-card{padding:15px}
-            .tab{padding:8px 8px;font-size:.75em}
-            .chart-container{height:250px;padding:8px;margin:12px 0}
-            .comparison-table{font-size:.7em;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
-            .btn{padding:10px 15px;font-size:.9em;width:100%;display:block;margin:6px 0}
-            .ranking-item{flex-wrap:wrap;gap:6px}
-            .rank-info{width:calc(100% - 90px)}
-            .targets-section{padding:12px}
-            .targets-section h2{font-size:1.1em}
-            .ranking-header h2{font-size:1.1em}
-            .strengths-box h3,.weaknesses-box h3,.recommendations-box h3{font-size:1em}
+            .tab{padding:8px 10px;font-size:.8em}
+            .chart-container{height:250px;padding:8px}
+            .btn{padding:10px 15px;font-size:.9em}
+            .report-stat h2{font-size:1.8em!important}
+            .comparison-table th,.comparison-table td{padding:6px 4px;font-size:.75em}
+            .ranking-item{flex-wrap:wrap;gap:5px}
+            .rank-info{flex-basis:calc(100% - 50px)}
         }
-        
-        /* iOS zoom prevention + touch friendly */
-        @media(hover:none){
-            .btn,.tab,.ranking-filter-btn,.upload-area{-webkit-tap-highlight-color:transparent}
-            .btn:active{transform:scale(.97)}
-            select,input{font-size:16px!important}
-        }
+        /* Search Select */
+        .search-select-wrap{position:relative;width:100%}
+        .search-select-input{width:100%;padding:15px;border:2px solid #e0e0e0;border-radius:8px;font-size:1.1em;font-family:'Tajawal',sans-serif;cursor:pointer;background:#fff}
+        .search-select-input:focus{border-color:#4472C4;outline:none;box-shadow:0 0 0 3px rgba(68,114,196,.15)}
+        .search-select-dropdown{display:none;position:absolute;top:100%;right:0;left:0;background:#fff;border:2px solid #4472C4;border-radius:0 0 10px 10px;max-height:300px;overflow-y:auto;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.15)}
+        .search-select-dropdown.open{display:block}
+        .search-select-search{width:100%;padding:12px 15px;border:none;border-bottom:2px solid #e0e0e0;font-size:1em;font-family:'Tajawal',sans-serif;outline:none;position:sticky;top:0;background:#fff}
+        .search-select-option{padding:12px 15px;cursor:pointer;transition:.15s;border-bottom:1px solid #f0f0f0}
+        .search-select-option:hover,.search-select-option.highlighted{background:#e8f0fe;color:#4472C4}
+        .search-select-option.selected{background:#4472C4;color:#fff;font-weight:700}
+        .search-select-empty{padding:15px;text-align:center;color:#999}
+        /* Ranking Subject Tabs */
+        .ranking-subj-tabs{display:flex;gap:8px;justify-content:center;margin:15px 0 25px;flex-wrap:wrap}
+        .ranking-subj-btn{padding:10px 25px;border:2px solid #4472C4;background:#fff;color:#4472C4;border-radius:25px;cursor:pointer;font-weight:700;font-size:1em;font-family:'Tajawal',sans-serif;transition:.3s}
+        .ranking-subj-btn:hover{background:rgba(68,114,196,.1)}
+        .ranking-subj-btn.active{background:linear-gradient(135deg,#4472C4,#764ba2);color:#fff;border-color:transparent;box-shadow:0 4px 15px rgba(68,114,196,.3)}
+        @media(max-width:768px){.ranking-subj-btn{padding:8px 16px;font-size:.9em}.search-select-input{padding:12px;font-size:1em}}
     </style>
 </head>
 <body>
@@ -217,7 +225,7 @@
     <div class="card no-print" id="uploadCard" style="display:none"><h2 style="color:#4472C4;margin-bottom:25px;text-align:center">📁 ارفع ملف نافس</h2><div class="alert alert-info"><strong>💡</strong> ارفع ملف نافس الرسمي (.xlsx)</div><div class="upload-area" id="uploadArea"><div class="upload-icon">📤</div><h2>اسحب ملف Excel هنا</h2><p style="font-size:1.2em;margin:15px 0">أو اضغط للاختيار</p><input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none"></div><div class="spinner" id="spinner"></div><div id="status"></div></div>
     <div class="card hidden no-print" id="dashboardCard"><h2 style="color:#4472C4;margin-bottom:20px">📈 أداء العام <span id="currentYear"></span></h2><div class="dashboard" id="stats"></div></div>
     <div class="card hidden no-print" id="comparisonCard"><h2 style="color:#4472C4;margin-bottom:20px">📊 جدول المقارنة</h2><div id="comparisonTableContainer"></div></div>
-    <div class="card hidden no-print" id="controlsCard"><h2 style="color:#4472C4;margin-bottom:20px">⚙️ خيارات العرض</h2><div class="controls"><div class="form-group"><label>📚 المادة</label><select id="subjectSelect" onchange="updateView()"><option value="all">جميع المواد</option></select></div><div class="form-group"><label>🏫 المدرسة</label><select id="schoolSelect" onchange="updateView()"><option value="">الكل</option></select></div></div></div>
+    <div class="card hidden no-print" id="controlsCard"><h2 style="color:#4472C4;margin-bottom:20px">⚙️ خيارات العرض</h2><div class="controls"><div class="form-group"><label>📚 المادة</label><select id="subjectSelect" onchange="updateView()"><option value="all">جميع المواد</option></select></div><div class="form-group"><label>🏫 المدرسة</label><div class="search-select-wrap" id="schoolSearchWrap"><input type="text" class="search-select-input" id="schoolSearchInput" placeholder="اختر مدرسة أو ابحث..." readonly onclick="toggleSchoolDropdown()"><div class="search-select-dropdown" id="schoolDropdown"><input type="text" class="search-select-search" id="schoolSearchFilter" placeholder="🔍 ابحث عن مدرسة..." oninput="filterSchoolList()"><div id="schoolOptionsList"></div></div></div></div></div></div>
     <div class="card hidden" id="mainCard">
         <div class="tabs no-print"><button class="tab active" onclick="switchTab(0)">📊 الرسومات</button><button class="tab" onclick="switchTab(1)">📄 التقرير الشامل</button><button class="tab" onclick="switchTab(2)">🏆 ترتيب المدارس</button></div>
         <div class="tab-content active" id="tab0"><div id="chartsContent"></div></div>
@@ -226,7 +234,7 @@
     </div>
 </div>
 <script>
-var D={raw:[],school:'',subject:'all',latestYear:'',previousYear:'',charts:{},targets:{math:50,reading:55,science:60}};
+var D={raw:[],school:'',subject:'all',latestYear:'',previousYear:'',charts:{},targets:{math:50,reading:55,science:60},selectedSchool:'',rankSubject:'all',schoolNames:[]};
 function avg(a){if(!a||!a.length)return 0;var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
 
 /* === Dynamic column finder for level data === */
@@ -378,7 +386,47 @@ function saveTargets(){D.targets.math=parseFloat(document.getElementById('target
 function loadTargets(){try{var s=localStorage.getItem('nafesTargets');if(s){D.targets=JSON.parse(s);document.getElementById('targetMath').value=D.targets.math;document.getElementById('targetReading').value=D.targets.reading;document.getElementById('targetScience').value=D.targets.science}}catch(e){}}
 function setupFileUpload(){var a=document.getElementById('uploadArea'),inp=document.getElementById('fileInput');if(!a||!inp)return;a.onclick=function(){inp.click()};a.ondragover=function(e){e.preventDefault();a.classList.add('dragover')};a.ondragleave=function(){a.classList.remove('dragover')};a.ondrop=function(e){e.preventDefault();a.classList.remove('dragover');if(e.dataTransfer.files[0])processFile(e.dataTransfer.files[0])};inp.onchange=function(e){if(e.target.files[0])processFile(e.target.files[0])}}
 async function processFile(file){if(!file.name.match(/\.xlsx?$/)){showStatus('⚠️ يرجى رفع ملف Excel','warning');return}var sp=document.getElementById('spinner');if(sp)sp.classList.add('show');showStatus('⏳ جاري قراءة...','info');try{var buf=await file.arrayBuffer(),wb=XLSX.read(buf),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);if(!rows.length)throw new Error('فارغ');loadData(rows)}catch(err){showStatus('❌ خطأ: '+err.message,'warning')}finally{if(sp)sp.classList.remove('show')}}
-function populateSchools(){var sel=document.getElementById('schoolSelect');if(!sel)return;var s=new Set();for(var i=0;i<D.raw.length;i++){var n=D.raw[i]['اسم المدرسة']||D.raw[i]['المدرسة'];if(n&&typeof n==='string')s.add(n.trim())}var names=Array.from(s).sort();if(names.length>1){sel.innerHTML='<option value="">الكل</option>'+names.map(function(n){return'<option value="'+n+'">'+n+'</option>'}).join('');sel.disabled=false}else if(names.length===1){sel.innerHTML='<option value="'+names[0]+'">'+names[0]+'</option>';sel.disabled=true}}
+function populateSchools(){
+    D.schoolNames=[];
+    var s=new Set();for(var i=0;i<D.raw.length;i++){var n=D.raw[i]['اسم المدرسة']||D.raw[i]['المدرسة'];if(n&&typeof n==='string')s.add(n.trim())}
+    D.schoolNames=Array.from(s).sort();
+    D.selectedSchool='';
+    renderSchoolOptions('');
+    var inp=document.getElementById('schoolSearchInput');
+    if(inp)inp.value=D.schoolNames.length>1?'جميع المدارس':D.schoolNames[0]||'';
+}
+function toggleSchoolDropdown(){
+    var dd=document.getElementById('schoolDropdown');
+    var isOpen=dd.classList.contains('open');
+    if(isOpen){dd.classList.remove('open')}
+    else{dd.classList.add('open');var sf=document.getElementById('schoolSearchFilter');sf.value='';sf.focus();renderSchoolOptions('')}
+}
+function filterSchoolList(){
+    var q=document.getElementById('schoolSearchFilter').value.trim();
+    renderSchoolOptions(q);
+}
+function renderSchoolOptions(query){
+    var list=document.getElementById('schoolOptionsList');
+    if(!list)return;
+    var names=D.schoolNames||[];
+    var filtered=query?names.filter(function(n){return n.indexOf(query)!==-1}):names;
+    var html='<div class="search-select-option'+(D.selectedSchool===''?' selected':'')+'" onclick="selectSchool(\'\')">📊 جميع المدارس</div>';
+    if(filtered.length===0&&query){html+='<div class="search-select-empty">لا توجد نتائج لـ "'+query+'"</div>'}
+    else{for(var i=0;i<filtered.length;i++){var n=filtered[i];html+='<div class="search-select-option'+(D.selectedSchool===n?' selected':'')+'" onclick="selectSchool(\''+n.replace(/'/g,"\\'")+'\')">🏫 '+n+'</div>'}}
+    list.innerHTML=html;
+}
+function selectSchool(name){
+    D.selectedSchool=name;
+    var inp=document.getElementById('schoolSearchInput');
+    inp.value=name||'جميع المدارس';
+    document.getElementById('schoolDropdown').classList.remove('open');
+    updateView();
+}
+// Close dropdown when clicking outside
+document.addEventListener('click',function(e){
+    var wrap=document.getElementById('schoolSearchWrap');
+    if(wrap&&!wrap.contains(e.target)){document.getElementById('schoolDropdown').classList.remove('open')}
+});
 function populateSelects(){var subjs=[...new Set(D.raw.map(function(r){return r['المجال']}))].filter(Boolean);document.getElementById('subjectSelect').innerHTML='<option value="all">جميع المواد</option>'+subjs.map(function(s){return'<option value="'+s+'">'+s+'</option>'}).join('')}
 
 /* === DASHBOARD === */
@@ -408,9 +456,9 @@ function showComparison(){
 }
 function updateView(){
     D.subject=document.getElementById('subjectSelect').value;
-    var sel=document.getElementById('schoolSelect').value;
+    var sel=D.selectedSchool||'';
     var bd=D.raw;if(sel)bd=D.raw.filter(function(r){return r['المدرسة']===sel||r['اسم المدرسة']===sel});
-    showDashFiltered(bd);drawCharts(bd);generateReport(bd);generateRanking(bd);
+    showDashFiltered(bd);drawCharts(bd);generateReport(bd);generateRanking(D.raw);
 }
 /* === INTERACTIVE CHARTS (Tab 0) === */
 function drawCharts(bd){
@@ -660,14 +708,14 @@ function generateRanking(bd){
     var ss=new Set();for(var i=0;i<bd.length;i++){var n=bd[i]['اسم المدرسة']||bd[i]['المدرسة'];if(n)ss.add(n)}
     if(ss.size<2){document.getElementById('rankingContent').innerHTML='<div class="alert alert-warning" style="text-align:center;font-size:1.2em">⚠️ ترتيب المدارس يتطلب بيانات أكثر من مدرسة واحدة</div>';return}
     
-    var subj=D.subject==='all'?null:D.subject;
+    // Use ranking-specific subject, default to global or 'all'
+    if(!D.rankSubject)D.rankSubject='all';
+    var subj=D.rankSubject==='all'?null:D.rankSubject;
     var subjLabel=subj||'جميع المواد';
     
-    // Calculate school performance for latest year
-    function getSchoolPerf(schoolName, year){
-        var rows=bd.filter(function(r){return (r['اسم المدرسة']===schoolName||r['المدرسة']===schoolName)&&r['العام الدراسي - ميلادي']===year});
+    function getSchoolPerf(schoolName,year){
+        var rows=bd.filter(function(r){return(r['اسم المدرسة']===schoolName||r['المدرسة']===schoolName)&&r['العام الدراسي - ميلادي']===year});
         if(subj)rows=rows.filter(function(r){return r['المجال']===subj});
-        // Get main subject rows only
         var mainRows=rows.filter(function(r){return r['المجال']===r['المجال الفرعي']});
         if(!mainRows.length)mainRows=rows;
         var totalTested=0,totalPassed=0;
@@ -675,7 +723,6 @@ function generateRanking(bd){
         return totalTested>0?(totalPassed/totalTested)*100:0;
     }
     
-    // Build school data
     var schools=[];
     ss.forEach(function(name){
         var perf=getSchoolPerf(name,D.latestYear);
@@ -684,12 +731,9 @@ function generateRanking(bd){
         if(perf>0)schools.push({name:name,perf:perf,prevPerf:prevPerf,change:change});
     });
     
-    // Sort by performance
     var sorted=[].concat(schools).sort(function(a,b){return b.perf-a.perf});
     var top20=sorted.slice(0,20);
     var bottom20=[].concat(schools).sort(function(a,b){return a.perf-b.perf}).slice(0,20);
-    
-    // Sort by improvement
     var withChange=schools.filter(function(s){return s.change!==null});
     var improved=[].concat(withChange).sort(function(a,b){return b.change-a.change}).slice(0,20).filter(function(s){return s.change>0});
     var declined=[].concat(withChange).sort(function(a,b){return a.change-b.change}).slice(0,20).filter(function(s){return s.change<0});
@@ -702,12 +746,11 @@ function generateRanking(bd){
         if(c<0)return'<span class="rank-change down"><span class="change-arrow">▼</span>'+c.toFixed(1)+'%</span>';
         return'<span class="rank-change same"><span class="change-arrow">●</span>0%</span>';
     }
-    
     function buildList(items,type){
         var html='<ul class="ranking-list">';
         for(var i=0;i<items.length;i++){
-            var s=items[i];
-            var nc=type==='bottom'?'bad':rankClass(i);
+            var s=items[i];var nc=type==='bottom'?'bad':rankClass(i);
+            var rank=type==='bottom'?'':('#'+(sorted.indexOf(s)+1)+' من '+schools.length);
             html+='<li class="ranking-item">';
             html+='<div class="rank-num '+nc+'">'+(i+1)+'</div>';
             html+='<div class="rank-info"><div class="rank-name">'+s.name+'</div>';
@@ -717,14 +760,33 @@ function generateRanking(bd){
             html+='<div class="rank-score '+scoreClass(s.perf)+'">'+s.perf.toFixed(1)+'%</div>';
             html+='</li>';
         }
-        html+='</ul>';
-        return html;
+        html+='</ul>';return html;
     }
     
-    var html='<div class="ranking-header"><h2>🏆 ترتيب المدارس - '+subjLabel+'</h2>';
+    // === BUILD HTML ===
+    var html='<div class="ranking-header"><h2>🏆 ترتيب المدارس</h2>';
     html+='<p>العام الدراسي: '+D.latestYear+' | عدد المدارس: '+schools.length+'</p></div>';
     
-    // Top & Bottom Grid
+    // Subject filter tabs
+    var allSubjs=['all','الرياضيات','القراءة','العلوم'];
+    var allLabels={'all':'📊 جميع المواد','الرياضيات':'📐 الرياضيات','القراءة':'📖 القراءة','العلوم':'🔬 العلوم'};
+    html+='<div class="ranking-subj-tabs">';
+    for(var i=0;i<allSubjs.length;i++){
+        var k=allSubjs[i];
+        html+='<button class="ranking-subj-btn'+(D.rankSubject===k?' active':'')+'" onclick="setRankSubject(\''+k+'\')">'+allLabels[k]+'</button>';
+    }
+    html+='</div>';
+    
+    // School search within ranking
+    html+='<div style="max-width:500px;margin:0 auto 25px;position:relative">';
+    html+='<input type="text" id="rankSchoolSearch" class="search-select-input" placeholder="🔍 ابحث عن مدرسة لمعرفة ترتيبها..." oninput="searchSchoolRank()" style="text-align:center">';
+    html+='<div id="rankSearchResult" style="display:none"></div>';
+    html+='</div>';
+    
+    // Showing subject label
+    html+='<div style="text-align:center;margin-bottom:20px"><span style="background:linear-gradient(135deg,#4472C4,#764ba2);color:#fff;padding:8px 25px;border-radius:20px;font-weight:700;font-size:1.1em">'+subjLabel+'</span></div>';
+    
+    // Top & Bottom
     html+='<div class="ranking-grid">';
     html+='<div class="ranking-card"><div class="ranking-card-header top">🥇 أفضل 20 مدرسة</div>'+buildList(top20,'top')+'</div>';
     html+='<div class="ranking-card"><div class="ranking-card-header bottom">⚠️ أقل 20 مدرسة</div>'+buildList(bottom20,'bottom')+'</div>';
@@ -751,6 +813,47 @@ function generateRanking(bd){
     html+='</div>';
     
     document.getElementById('rankingContent').innerHTML=html;
+    
+    // Store sorted data for search
+    D._rankSorted=sorted;
+    D._rankSchools=schools;
+}
+
+function setRankSubject(s){
+    D.rankSubject=s;
+    generateRanking(D.raw);
+}
+
+function searchSchoolRank(){
+    var q=document.getElementById('rankSchoolSearch').value.trim();
+    var res=document.getElementById('rankSearchResult');
+    if(!q||!D._rankSorted){res.style.display='none';return}
+    
+    var matches=D._rankSorted.filter(function(s){return s.name.indexOf(q)!==-1});
+    if(!matches.length){
+        res.style.display='block';
+        res.innerHTML='<div style="background:#f8d7da;color:#721c24;padding:15px;border-radius:10px;margin-top:10px;text-align:center">لا توجد نتائج لـ "'+q+'"</div>';
+        return;
+    }
+    
+    var total=D._rankSorted.length;
+    var html='<div style="margin-top:10px">';
+    for(var i=0;i<Math.min(matches.length,5);i++){
+        var s=matches[i];
+        var rank=D._rankSorted.indexOf(s)+1;
+        var pct=((rank/total)*100).toFixed(0);
+        var color=s.perf>=50?'#28a745':s.perf>=30?'#ffc107':'#dc3545';
+        var changeStr=s.change!==null?(s.change>0?'<span style="color:#28a745;font-weight:700"> ▲+'+s.change.toFixed(1)+'%</span>':'<span style="color:#dc3545;font-weight:700"> ▼'+s.change.toFixed(1)+'%</span>'):'';
+        html+='<div style="background:#fff;border:2px solid '+color+';border-radius:12px;padding:18px;margin-bottom:10px;display:flex;align-items:center;gap:15px;flex-wrap:wrap">';
+        html+='<div style="background:'+color+';color:#fff;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2em;flex-shrink:0">'+rank+'</div>';
+        html+='<div style="flex:1;min-width:150px"><div style="font-weight:700;font-size:1.1em">'+s.name+'</div><div style="color:#888;font-size:.9em;margin-top:3px">الترتيب '+rank+' من '+total+' (أعلى من '+Math.max(0,100-parseInt(pct))+'% من المدارس)</div></div>';
+        html+='<div style="text-align:center;flex-shrink:0"><div style="font-size:1.8em;font-weight:900;color:'+color+'">'+s.perf.toFixed(1)+'%</div>'+changeStr+'</div>';
+        html+='</div>';
+    }
+    if(matches.length>5)html+='<div style="text-align:center;color:#888;padding:10px">وأيضاً '+(matches.length-5)+' مدرسة أخرى...</div>';
+    html+='</div>';
+    res.style.display='block';
+    res.innerHTML=html;
 }
 
 /* === PDF EXPORT - Section by section to prevent cutting === */
