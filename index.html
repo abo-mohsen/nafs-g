@@ -82,6 +82,45 @@
         @keyframes prog{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
         .report-chart-img{width:100%;max-width:700px;height:auto;display:block;margin:15px auto;border-radius:8px}
         #chartFactory{position:fixed;left:-9999px;top:0;width:800px;height:600px;pointer-events:none;opacity:0}
+        /* Ranking Styles */
+        .ranking-header{text-align:center;margin-bottom:30px}
+        .ranking-header h2{color:#4472C4;font-size:1.8em;margin-bottom:10px}
+        .ranking-header p{color:#666;font-size:1.1em}
+        .ranking-filters{display:flex;gap:15px;justify-content:center;margin:20px 0;flex-wrap:wrap}
+        .ranking-filter-btn{padding:10px 25px;border:2px solid #4472C4;background:#fff;color:#4472C4;border-radius:25px;cursor:pointer;font-weight:700;font-size:1em;font-family:'Tajawal',sans-serif;transition:.3s}
+        .ranking-filter-btn.active{background:linear-gradient(135deg,#4472C4,#764ba2);color:#fff;border-color:transparent}
+        .ranking-grid{display:grid;grid-template-columns:1fr 1fr;gap:25px;margin:25px 0}
+        .ranking-card{border-radius:15px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,.08)}
+        .ranking-card-header{padding:20px;color:#fff;text-align:center;font-size:1.2em;font-weight:700}
+        .ranking-card-header.top{background:linear-gradient(135deg,#28a745,#20c997)}
+        .ranking-card-header.bottom{background:linear-gradient(135deg,#dc3545,#c82333)}
+        .ranking-card-header.improved{background:linear-gradient(135deg,#17a2b8,#138496)}
+        .ranking-card-header.declined{background:linear-gradient(135deg,#fd7e14,#e8590c)}
+        .ranking-list{list-style:none;padding:0;margin:0}
+        .ranking-item{display:flex;align-items:center;padding:12px 20px;border-bottom:1px solid #f0f0f0;transition:.2s}
+        .ranking-item:hover{background:#f8f9fa}
+        .ranking-item:last-child{border-bottom:none}
+        .rank-num{width:35px;height:35px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.95em;margin-left:15px;flex-shrink:0}
+        .rank-num.gold{background:linear-gradient(135deg,#ffd700,#ffb300);color:#fff}
+        .rank-num.silver{background:linear-gradient(135deg,#c0c0c0,#a0a0a0);color:#fff}
+        .rank-num.bronze{background:linear-gradient(135deg,#cd7f32,#b8650a);color:#fff}
+        .rank-num.normal{background:#e9ecef;color:#495057}
+        .rank-num.bad{background:#f8d7da;color:#721c24}
+        .rank-info{flex:1;min-width:0}
+        .rank-name{font-weight:700;color:#333;font-size:.95em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .rank-detail{font-size:.8em;color:#888;margin-top:3px}
+        .rank-score{font-weight:900;font-size:1.3em;margin-right:10px;flex-shrink:0}
+        .rank-score.high{color:#28a745}
+        .rank-score.low{color:#dc3545}
+        .rank-score.mid{color:#ffc107}
+        .rank-change{display:flex;align-items:center;gap:5px;font-weight:700;font-size:.95em;margin-right:10px;flex-shrink:0;min-width:70px;justify-content:flex-end}
+        .rank-change.up{color:#28a745}
+        .rank-change.down{color:#dc3545}
+        .rank-change.same{color:#888}
+        .change-arrow{font-size:1.2em}
+        .ranking-section-full{margin:30px 0}
+        .ranking-section-full .ranking-card{margin-bottom:0}
+        @media(max-width:900px){.ranking-grid{grid-template-columns:1fr}}
         .no-print{} /* placeholder */
         @media print{.no-print{display:none!important}}
         @media(max-width:768px){.header h1{font-size:1.8em}.dashboard,.targets-grid,.report-stats{grid-template-columns:1fr}}
@@ -97,9 +136,10 @@
     <div class="card hidden no-print" id="comparisonCard"><h2 style="color:#4472C4;margin-bottom:20px">📊 جدول المقارنة</h2><div id="comparisonTableContainer"></div></div>
     <div class="card hidden no-print" id="controlsCard"><h2 style="color:#4472C4;margin-bottom:20px">⚙️ خيارات العرض</h2><div class="controls"><div class="form-group"><label>📚 المادة</label><select id="subjectSelect" onchange="updateView()"><option value="all">جميع المواد</option></select></div><div class="form-group"><label>🏫 المدرسة</label><select id="schoolSelect" onchange="updateView()"><option value="">الكل</option></select></div></div></div>
     <div class="card hidden" id="mainCard">
-        <div class="tabs no-print"><button class="tab active" onclick="switchTab(0)">📊 الرسومات</button><button class="tab" onclick="switchTab(1)">📄 التقرير الشامل</button></div>
+        <div class="tabs no-print"><button class="tab active" onclick="switchTab(0)">📊 الرسومات</button><button class="tab" onclick="switchTab(1)">📄 التقرير الشامل</button><button class="tab" onclick="switchTab(2)">🏆 ترتيب المدارس</button></div>
         <div class="tab-content active" id="tab0"><div id="chartsContent"></div></div>
         <div class="tab-content" id="tab1"><div id="reportPreview"></div><div style="text-align:center;margin-top:30px" class="no-print"><button class="btn btn-pdf" onclick="exportPDF()">📥 تحميل PDF</button> <button class="btn" onclick="printReport()">🖨️ طباعة التقرير</button></div></div>
+        <div class="tab-content" id="tab2"><div id="rankingContent"></div></div>
     </div>
 </div>
 <script>
@@ -287,7 +327,7 @@ function updateView(){
     D.subject=document.getElementById('subjectSelect').value;
     var sel=document.getElementById('schoolSelect').value;
     var bd=D.raw;if(sel)bd=D.raw.filter(function(r){return r['المدرسة']===sel||r['اسم المدرسة']===sel});
-    showDashFiltered(bd);drawCharts(bd);generateReport(bd);
+    showDashFiltered(bd);drawCharts(bd);generateReport(bd);generateRanking(bd);
 }
 /* === INTERACTIVE CHARTS (Tab 0) === */
 function drawCharts(bd){
@@ -442,6 +482,105 @@ async function generateReport(bd){
     if(img4)html+='<div style="background:#f9f9f9;border-radius:10px;padding:15px;margin:15px 0;text-align:center"><img class="report-chart-img" src="'+img4+'" alt="chart4"></div>';
     html+='</div></div>';
     document.getElementById('reportPreview').innerHTML=html;
+}
+
+/* === SCHOOL RANKING (Tab 2) === */
+function generateRanking(bd){
+    if(!bd)bd=D.raw;
+    var ss=new Set();for(var i=0;i<bd.length;i++){var n=bd[i]['اسم المدرسة']||bd[i]['المدرسة'];if(n)ss.add(n)}
+    if(ss.size<2){document.getElementById('rankingContent').innerHTML='<div class="alert alert-warning" style="text-align:center;font-size:1.2em">⚠️ ترتيب المدارس يتطلب بيانات أكثر من مدرسة واحدة</div>';return}
+    
+    var subj=D.subject==='all'?null:D.subject;
+    var subjLabel=subj||'جميع المواد';
+    
+    // Calculate school performance for latest year
+    function getSchoolPerf(schoolName, year){
+        var rows=bd.filter(function(r){return (r['اسم المدرسة']===schoolName||r['المدرسة']===schoolName)&&r['العام الدراسي - ميلادي']===year});
+        if(subj)rows=rows.filter(function(r){return r['المجال']===subj});
+        // Get main subject rows only
+        var mainRows=rows.filter(function(r){return r['المجال']===r['المجال الفرعي']});
+        if(!mainRows.length)mainRows=rows;
+        var totalTested=0,totalPassed=0;
+        for(var i=0;i<mainRows.length;i++){totalTested+=mainRows[i]['مجموع المختبرين']||0;totalPassed+=mainRows[i]['مجموع المتقنين']||0}
+        return totalTested>0?(totalPassed/totalTested)*100:0;
+    }
+    
+    // Build school data
+    var schools=[];
+    ss.forEach(function(name){
+        var perf=getSchoolPerf(name,D.latestYear);
+        var prevPerf=D.previousYear?getSchoolPerf(name,D.previousYear):null;
+        var change=prevPerf!==null&&prevPerf>0?(perf-prevPerf):null;
+        if(perf>0)schools.push({name:name,perf:perf,prevPerf:prevPerf,change:change});
+    });
+    
+    // Sort by performance
+    var sorted=[].concat(schools).sort(function(a,b){return b.perf-a.perf});
+    var top20=sorted.slice(0,20);
+    var bottom20=[].concat(schools).sort(function(a,b){return a.perf-b.perf}).slice(0,20);
+    
+    // Sort by improvement
+    var withChange=schools.filter(function(s){return s.change!==null});
+    var improved=[].concat(withChange).sort(function(a,b){return b.change-a.change}).slice(0,20).filter(function(s){return s.change>0});
+    var declined=[].concat(withChange).sort(function(a,b){return a.change-b.change}).slice(0,20).filter(function(s){return s.change<0});
+    
+    function rankClass(i){return i===0?'gold':i===1?'silver':i===2?'bronze':'normal'}
+    function scoreClass(v){return v>=50?'high':v>=30?'mid':'low'}
+    function changeHtml(c){
+        if(c===null)return'<span class="rank-change same">-</span>';
+        if(c>0)return'<span class="rank-change up"><span class="change-arrow">▲</span>+'+c.toFixed(1)+'%</span>';
+        if(c<0)return'<span class="rank-change down"><span class="change-arrow">▼</span>'+c.toFixed(1)+'%</span>';
+        return'<span class="rank-change same"><span class="change-arrow">●</span>0%</span>';
+    }
+    
+    function buildList(items,type){
+        var html='<ul class="ranking-list">';
+        for(var i=0;i<items.length;i++){
+            var s=items[i];
+            var nc=type==='bottom'?'bad':rankClass(i);
+            html+='<li class="ranking-item">';
+            html+='<div class="rank-num '+nc+'">'+(i+1)+'</div>';
+            html+='<div class="rank-info"><div class="rank-name">'+s.name+'</div>';
+            if(s.prevPerf!==null&&s.prevPerf>0)html+='<div class="rank-detail">السنة السابقة: '+s.prevPerf.toFixed(1)+'%</div>';
+            html+='</div>';
+            html+=changeHtml(s.change);
+            html+='<div class="rank-score '+scoreClass(s.perf)+'">'+s.perf.toFixed(1)+'%</div>';
+            html+='</li>';
+        }
+        html+='</ul>';
+        return html;
+    }
+    
+    var html='<div class="ranking-header"><h2>🏆 ترتيب المدارس - '+subjLabel+'</h2>';
+    html+='<p>العام الدراسي: '+D.latestYear+' | عدد المدارس: '+schools.length+'</p></div>';
+    
+    // Top & Bottom Grid
+    html+='<div class="ranking-grid">';
+    html+='<div class="ranking-card"><div class="ranking-card-header top">🥇 أفضل 20 مدرسة</div>'+buildList(top20,'top')+'</div>';
+    html+='<div class="ranking-card"><div class="ranking-card-header bottom">⚠️ أقل 20 مدرسة</div>'+buildList(bottom20,'bottom')+'</div>';
+    html+='</div>';
+    
+    // Improved & Declined
+    if(improved.length>0||declined.length>0){
+        html+='<div style="margin-top:35px"><h2 style="color:#4472C4;text-align:center;margin-bottom:25px">📈 تغيّر الأداء مقارنة بالعام السابق ('+D.previousYear+')</h2></div>';
+        html+='<div class="ranking-grid">';
+        if(improved.length>0)html+='<div class="ranking-card"><div class="ranking-card-header improved">📈 أكثر المدارس تحسناً ('+improved.length+')</div>'+buildList(improved,'top')+'</div>';
+        if(declined.length>0)html+='<div class="ranking-card"><div class="ranking-card-header declined">📉 أكثر المدارس تراجعاً ('+declined.length+')</div>'+buildList(declined,'bottom')+'</div>';
+        html+='</div>';
+    }
+    
+    // Summary stats
+    var avgPerf=avg(schools.map(function(s){return s.perf}));
+    var above50=schools.filter(function(s){return s.perf>=50}).length;
+    var below30=schools.filter(function(s){return s.perf<30}).length;
+    html+='<div style="margin-top:35px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;text-align:center">';
+    html+='<div style="background:linear-gradient(135deg,#4472C4,#764ba2);color:#fff;padding:25px;border-radius:12px"><div style="font-size:2.2em;font-weight:900">'+avgPerf.toFixed(1)+'%</div><div style="margin-top:8px;opacity:.9">متوسط الأداء العام</div></div>';
+    html+='<div style="background:linear-gradient(135deg,#28a745,#20c997);color:#fff;padding:25px;border-radius:12px"><div style="font-size:2.2em;font-weight:900">'+above50+'</div><div style="margin-top:8px;opacity:.9">مدرسة فوق 50%</div></div>';
+    html+='<div style="background:linear-gradient(135deg,#dc3545,#c82333);color:#fff;padding:25px;border-radius:12px"><div style="font-size:2.2em;font-weight:900">'+below30+'</div><div style="margin-top:8px;opacity:.9">مدرسة أقل من 30%</div></div>';
+    if(improved.length>0)html+='<div style="background:linear-gradient(135deg,#17a2b8,#138496);color:#fff;padding:25px;border-radius:12px"><div style="font-size:2.2em;font-weight:900">'+improved.length+'</div><div style="margin-top:8px;opacity:.9">مدرسة تحسنت</div></div>';
+    html+='</div>';
+    
+    document.getElementById('rankingContent').innerHTML=html;
 }
 
 /* === PDF EXPORT - Section by section to prevent cutting === */
