@@ -120,10 +120,93 @@
         .change-arrow{font-size:1.2em}
         .ranking-section-full{margin:30px 0}
         .ranking-section-full .ranking-card{margin-bottom:0}
-        @media(max-width:900px){.ranking-grid{grid-template-columns:1fr}}
         .no-print{} /* placeholder */
         @media print{.no-print{display:none!important}}
-        @media(max-width:768px){.header h1{font-size:1.8em}.dashboard,.targets-grid,.report-stats{grid-template-columns:1fr}}
+        
+        /* === RESPONSIVE - Tablets === */
+        @media(max-width:1024px){
+            body{padding:15px}
+            .container{max-width:100%}
+            .card{padding:25px}
+            .header{padding:30px 20px}
+            .header h1{font-size:2em}
+            .dashboard{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px}
+            .targets-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+            .chart-container{height:350px;padding:15px}
+            .ranking-item{padding:10px 15px}
+        }
+        
+        /* === RESPONSIVE - Mobile === */
+        @media(max-width:768px){
+            body{padding:10px}
+            .header{padding:25px 15px;border-radius:12px;margin-bottom:20px}
+            .header h1{font-size:1.4em;line-height:1.4}
+            .header p{font-size:.95em}
+            .card{padding:18px;margin-bottom:15px;border-radius:12px}
+            .dashboard{grid-template-columns:1fr;gap:12px}
+            .stat-card{padding:20px}
+            .stat-card h3{font-size:2em}
+            .stat-card .comparison{font-size:.8em}
+            .targets-grid{grid-template-columns:1fr}
+            .target-input{padding:15px}
+            .controls{grid-template-columns:1fr;gap:12px}
+            .form-group select{padding:12px;font-size:1em}
+            .tabs{gap:6px;justify-content:center}
+            .tab{padding:10px 14px;font-size:.85em;border-radius:8px;flex:1;text-align:center;min-width:0}
+            .chart-container{height:300px;padding:12px;margin:20px 0}
+            .comparison-table{font-size:.85em}
+            .comparison-table th,.comparison-table td{padding:10px 6px}
+            .report-stats{grid-template-columns:1fr!important;gap:10px}
+            .report-stat h2{font-size:2em!important}
+            .report-header h1{font-size:1.3em}
+            .report-header h2{font-size:1.05em}
+            .strengths-box,.weaknesses-box,.recommendations-box{padding:15px}
+            .strengths-box h3,.weaknesses-box h3,.recommendations-box h3{font-size:1.1em}
+            .strengths-box li,.weaknesses-box li,.recommendations-box li{font-size:.9em;padding:8px 0}
+            .btn{padding:12px 25px;font-size:1em;margin:6px 3px}
+            .upload-area{padding:30px 15px}
+            .upload-icon{font-size:3.5em}
+            .upload-area h2{font-size:1.2em}
+            .alert{padding:15px;font-size:1em}
+            .ranking-grid{grid-template-columns:1fr!important;gap:15px}
+            .ranking-header h2{font-size:1.3em}
+            .ranking-item{padding:10px 12px}
+            .rank-num{width:30px;height:30px;font-size:.85em;margin-left:10px}
+            .rank-name{font-size:.85em}
+            .rank-score{font-size:1.1em}
+            .rank-change{font-size:.85em;min-width:55px}
+            .ranking-filter-btn{padding:8px 18px;font-size:.9em}
+            .pdf-overlay-content{margin:20px;padding:25px}
+            #quickActions .btn{padding:10px 20px;font-size:.95em;display:block;margin:8px auto}
+        }
+        
+        /* === RESPONSIVE - Small Mobile === */
+        @media(max-width:480px){
+            body{padding:6px}
+            .header{padding:18px 10px}
+            .header h1{font-size:1.15em}
+            .header p{font-size:.85em}
+            .card{padding:12px;border-radius:10px}
+            .stat-card h3{font-size:1.7em}
+            .stat-card{padding:15px}
+            .tab{padding:8px 8px;font-size:.75em}
+            .chart-container{height:250px;padding:8px;margin:12px 0}
+            .comparison-table{font-size:.7em;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+            .btn{padding:10px 15px;font-size:.9em;width:100%;display:block;margin:6px 0}
+            .ranking-item{flex-wrap:wrap;gap:6px}
+            .rank-info{width:calc(100% - 90px)}
+            .targets-section{padding:12px}
+            .targets-section h2{font-size:1.1em}
+            .ranking-header h2{font-size:1.1em}
+            .strengths-box h3,.weaknesses-box h3,.recommendations-box h3{font-size:1em}
+        }
+        
+        /* iOS zoom prevention + touch friendly */
+        @media(hover:none){
+            .btn,.tab,.ranking-filter-btn,.upload-area{-webkit-tap-highlight-color:transparent}
+            .btn:active{transform:scale(.97)}
+            select,input{font-size:16px!important}
+        }
     </style>
 </head>
 <body>
