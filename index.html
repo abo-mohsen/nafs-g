@@ -110,22 +110,53 @@ function avg(a){if(!a||!a.length)return 0;var s=0;for(var i=0;i<a.length;i++)s+=
 function getLevels(rows){
     if(!rows||!rows.length)return{h:0,m:0,l:0,vl:0,count:0};
     var keys=Object.keys(rows[0]);
-    // Find exact keys by matching specific unique phrases
+    console.log('getLevels called with '+rows.length+' rows');
+    console.log('All keys:', keys.join(' | '));
+    
     var keyHigh=null, keyMed=null, keyLow=null, keyVLow=null;
+    
     for(var i=0;i<keys.length;i++){
         var k=keys[i];
-        // Must contain "مستوى" AND "الأداء" to be a performance level column
+        // Strategy 1: contains both مستوى and الأداء
         if(k.indexOf('مستوى')!==-1 && k.indexOf('الأداء')!==-1){
             if(k.indexOf('المرتفع')!==-1) keyHigh=k;
-            else if(k.indexOf('المتوسط')!==-1) keyMed=k;
             else if(k.indexOf('المنخفض')!==-1){
                 if(k.indexOf('جدا')!==-1 || k.indexOf('جداً')!==-1) keyVLow=k;
                 else keyLow=k;
             }
+            else if(k.indexOf('المتوسط')!==-1) keyMed=k;
+        }
+        // Strategy 2: contains نسبة الطلاب في مستوى
+        if(k.indexOf('نسبة الطلاب')!==-1 && k.indexOf('مستوى')!==-1){
+            if(k.indexOf('المرتفع')!==-1) keyHigh=k;
+            else if(k.indexOf('المنخفض')!==-1){
+                if(k.indexOf('جدا')!==-1 || k.indexOf('جداً')!==-1) keyVLow=k;
+                else keyLow=k;
+            }
+            else if(k.indexOf('المتوسط')!==-1) keyMed=k;
         }
     }
-    console.log('Level keys found:', {high:keyHigh, med:keyMed, low:keyLow, vlow:keyVLow});
-    if(!keyHigh && !keyMed && !keyLow && !keyVLow) return{h:0,m:0,l:0,vl:0,count:0};
+    
+    // Strategy 3: If still not found, try partial matches
+    if(!keyHigh||!keyMed||!keyLow||!keyVLow){
+        for(var i=0;i<keys.length;i++){
+            var k=keys[i];
+            if(!keyHigh && k.indexOf('الأداء المرتفع')!==-1) keyHigh=k;
+            if(!keyMed && k.indexOf('الأداء المتوسط')!==-1) keyMed=k;
+            if(!keyVLow && k.indexOf('المنخفض جدا')!==-1) keyVLow=k;
+            if(!keyVLow && k.indexOf('المنخفض جداً')!==-1) keyVLow=k;
+            if(!keyLow && k.indexOf('الأداء المنخفض')!==-1 && k.indexOf('جدا')===-1 && k.indexOf('جداً')===-1) keyLow=k;
+        }
+    }
+    
+    console.log('Level keys:', JSON.stringify({high:keyHigh, med:keyMed, low:keyLow, vlow:keyVLow}));
+    
+    // If no keys found at all, show what keys contain 'مستوى' or 'نسبة'
+    if(!keyHigh && !keyMed && !keyLow && !keyVLow){
+        var related=keys.filter(function(k){return k.indexOf('مستوى')!==-1||k.indexOf('نسبة')!==-1||k.indexOf('أداء')!==-1});
+        console.log('No level keys found! Related keys:', related);
+        return{h:0,m:0,l:0,vl:0,count:0};
+    }
     
     var hArr=[],mArr=[],lArr=[],vlArr=[];
     for(var i=0;i<rows.length;i++){
@@ -136,7 +167,7 @@ function getLevels(rows){
         var vlv=keyVLow?parseFloat(r[keyVLow])||0:0;
         if(hv>0||mv>0||lv>0||vlv>0){hArr.push(hv);mArr.push(mv);lArr.push(lv);vlArr.push(vlv)}
     }
-    console.log('Level data: records='+hArr.length+' avgH='+avg(hArr).toFixed(1)+' avgM='+avg(mArr).toFixed(1)+' avgL='+avg(lArr).toFixed(1)+' avgVL='+avg(vlArr).toFixed(1));
+    console.log('Level result: '+hArr.length+' records, H='+avg(hArr).toFixed(1)+' M='+avg(mArr).toFixed(1)+' L='+avg(lArr).toFixed(1)+' VL='+avg(vlArr).toFixed(1));
     return{h:avg(hArr),m:avg(mArr),l:avg(lArr),vl:avg(vlArr),count:hArr.length};
 }
 function getSD(bd,subj,yr){
