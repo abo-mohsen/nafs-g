@@ -105,6 +105,50 @@
 <script>
 var D={raw:[],school:'',subject:'all',latestYear:'',previousYear:'',charts:{},targets:{math:50,reading:55,science:60}};
 function avg(a){if(!a||!a.length)return 0;var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
+
+/* === Dynamic column finder for level data === */
+function findLevelKey(row, keyword){
+    // Search for the key containing the keyword in all row keys
+    var keys=Object.keys(row);
+    for(var i=0;i<keys.length;i++){
+        if(keys[i].indexOf(keyword)!==-1) return keys[i];
+    }
+    return null;
+}
+function getLevels(rows){
+    if(!rows||!rows.length)return{h:0,m:0,l:0,vl:0};
+    // Find keys dynamically from first row that has data
+    var sampleRow=rows[0];
+    var keyHigh=findLevelKey(sampleRow,'المرتفع');
+    var keyMed=findLevelKey(sampleRow,'المتوسط');
+    var keyLow=null, keyVLow=null;
+    // For low: find key that has المنخفض but NOT جدا
+    // For very low: find key that has المنخفض AND جدا
+    var keys=Object.keys(sampleRow);
+    for(var i=0;i<keys.length;i++){
+        var k=keys[i];
+        if(k.indexOf('مستوى')!==-1 && k.indexOf('المنخفض')!==-1){
+            if(k.indexOf('جدا')!==-1 || k.indexOf('جداً')!==-1) keyVLow=k;
+            else keyLow=k;
+        }
+        // Also match المتوسط specifically for level (not المتوسط على مستوى)
+        if(k.indexOf('مستوى الأداء المتوسط')!==-1) keyMed=k;
+        if(k.indexOf('مستوى الأداء المرتفع')!==-1) keyHigh=k;
+    }
+    console.log('Level keys found:', {high:keyHigh, med:keyMed, low:keyLow, vlow:keyVLow});
+    
+    var hArr=[],mArr=[],lArr=[],vlArr=[];
+    for(var i=0;i<rows.length;i++){
+        var r=rows[i];
+        var hv=keyHigh?parseFloat(r[keyHigh])||0:0;
+        var mv=keyMed?parseFloat(r[keyMed])||0:0;
+        var lv=keyLow?parseFloat(r[keyLow])||0:0;
+        var vlv=keyVLow?parseFloat(r[keyVLow])||0:0;
+        if(hv>0||mv>0||lv>0||vlv>0){hArr.push(hv);mArr.push(mv);lArr.push(lv);vlArr.push(vlv)}
+    }
+    console.log('Level data: records='+hArr.length+' avgH='+avg(hArr).toFixed(1)+' avgM='+avg(mArr).toFixed(1)+' avgL='+avg(lArr).toFixed(1)+' avgVL='+avg(vlArr).toFixed(1));
+    return{h:avg(hArr),m:avg(mArr),l:avg(lArr),vl:avg(vlArr),count:hArr.length};
+}
 function getSD(bd,subj,yr){
     var ld=bd.filter(function(r){return r['العام الدراسي - ميلادي']===yr});
     var ss=new Set();for(var i=0;i<bd.length;i++){var n=bd[i]['اسم المدرسة']||bd[i]['المدرسة'];if(n)ss.add(n)}
@@ -162,7 +206,17 @@ function tryLoad(src,i){
     fetch(src[i]).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(rows){if(!rows||!rows.length)throw 0;loadData(rows)}).catch(function(){tryLoad(src,i+1)})
 }
 function loadData(rows){
-    D.raw=rows;var ss=new Set();for(var i=0;i<rows.length;i++){var n=rows[i]['اسم المدرسة']||rows[i]['المدرسة'];if(n)ss.add(n)}
+    D.raw=rows;
+    // Debug: show available columns
+    if(rows.length>0){
+        var keys=Object.keys(rows[0]);
+        console.log('Available columns ('+keys.length+'):',keys);
+        var levelKeys=keys.filter(function(k){return k.indexOf('مستوى')!==-1});
+        console.log('Level-related columns:',levelKeys);
+        // Test first row values
+        levelKeys.forEach(function(k){console.log('  '+k+' = '+rows[0][k])});
+    }
+    var ss=new Set();for(var i=0;i<rows.length;i++){var n=rows[i]['اسم المدرسة']||rows[i]['المدرسة'];if(n)ss.add(n)}
     var sc=ss.size;D.school=sc===1?Array.from(ss)[0]:sc>1?'قاعدة بيانات ('+sc+' مدرسة)':'نافس';
     var yrs=[...new Set(rows.map(function(r){return r['العام الدراسي - ميلادي']}))].filter(Boolean).sort();
     D.latestYear=yrs[yrs.length-1];D.previousYear=yrs.length>1?yrs[yrs.length-2]:null;
@@ -239,10 +293,10 @@ function drawInteractive(f,bd){
     var x2=document.getElementById('c2');
     if(x2)D.charts.c2=new Chart(x2,{type:'bar',data:{labels:lbl,datasets:[{label:'نسبة الإتقان (%)',data:vals,backgroundColor:bgC}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{beginAtZero:true,max:100}}}});
     // Levels
-    var h=[],m=[],l=[],vl=[];for(var i=0;i<f.length;i++){var hv=parseFloat(f[i]['نسبة الطلاب في مستوى الأداء المرتفع'])||0;var mv=parseFloat(f[i]['نسبة الطلاب في مستوى الأداء المتوسط'])||0;var lv=parseFloat(f[i]['نسبة الطلاب في مستوى الأداء المنخفض'])||0;var vlv=parseFloat(f[i]['نسبة الطلاب في مستوى الأداء المنخفض جدا'])||0;if(hv>0||mv>0||lv>0||vlv>0){h.push(hv);m.push(mv);l.push(lv);vl.push(vlv)}}
+    var lvl=getLevels(f);
     if(D.charts.c3)D.charts.c3.destroy();
     var x3=document.getElementById('c3');
-    if(x3)D.charts.c3=new Chart(x3,{type:'doughnut',data:{labels:['مرتفع','متوسط','منخفض','منخفض جداً'],datasets:[{data:[avg(h),avg(m),avg(l),avg(vl)],backgroundColor:['#28a745','#36a2eb','#ffce56','#dc3545']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+    if(x3)D.charts.c3=new Chart(x3,{type:'doughnut',data:{labels:['مرتفع','متوسط','منخفض','منخفض جداً'],datasets:[{data:[lvl.h,lvl.m,lvl.l,lvl.vl],backgroundColor:['#28a745','#36a2eb','#ffce56','#dc3545']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
     // Trend
     var yrs=[...new Set(bd.map(function(r){return r['العام الدراسي - ميلادي']}))].filter(Boolean).sort(),colors={'الرياضيات':'#4472C4','القراءة':'#28a745','العلوم':'#ffc107'},ds=[];
     for(var s=0;s<subjs.length;s++){var v=yrs.map(function(y){return getSD(bd,subjs[s],y).perf});ds.push({label:subjs[s],data:v,borderColor:colors[subjs[s]],backgroundColor:colors[subjs[s]]+'20',borderWidth:3,tension:.3,fill:true})}
@@ -281,7 +335,7 @@ function drawDoughnutManual(values,labels,colors,title){
     // Calculate total
     var total=0;for(var i=0;i<values.length;i++)total+=values[i];
     console.log('Doughnut values:',values,'total:',total);
-    if(!total||total<=0){ctx.fillStyle='#999';ctx.font='18px Tajawal, sans-serif';ctx.fillText('لا توجد بيانات',cx,cy);return c.toDataURL('image/png',1.0)}
+    if(!total||total<=0||isNaN(total)){ctx.fillStyle='#999';ctx.font='18px Tajawal, sans-serif';ctx.fillText('لا توجد بيانات كافية',cx,cy);ctx.font='14px Tajawal, sans-serif';ctx.fillText('تأكد من رفع الملف الصحيح',cx,cy+30);return c.toDataURL('image/png',1.0)}
     // Draw slices
     var startAngle=-Math.PI/2;
     for(var i=0;i<values.length;i++){
@@ -341,17 +395,8 @@ async function generateReport(bd){
 
     // Levels doughnut chart - MANUAL DRAWING (Chart.js doughnut fails in hidden elements)
     // Use ld (all latest year data, not filtered by subject) for level distribution
-    var h=[],m=[],l=[],vl=[];
-    for(var i=0;i<ld.length;i++){
-        var rv=ld[i];
-        var hv=parseFloat(rv['نسبة الطلاب في مستوى الأداء المرتفع'])||0;
-        var mv=parseFloat(rv['نسبة الطلاب في مستوى الأداء المتوسط'])||0;
-        var lv=parseFloat(rv['نسبة الطلاب في مستوى الأداء المنخفض'])||0;
-        var vlv=parseFloat(rv['نسبة الطلاب في مستوى الأداء المنخفض جدا'])||0;
-        if(hv>0||mv>0||lv>0||vlv>0){h.push(hv);m.push(mv);l.push(lv);vl.push(vlv)}
-    }
-    console.log('Doughnut data - records with levels:',h.length,'avg high:',avg(h),'avg med:',avg(m),'avg low:',avg(l),'avg vlow:',avg(vl));
-    var img3=drawDoughnutManual([avg(h),avg(m),avg(l),avg(vl)],['مرتفع','متوسط','منخفض','منخفض جداً'],['#28a745','#36a2eb','#ffce56','#dc3545'],'توزيع مستويات الأداء');
+    var lvlR=getLevels(ld);
+    var img3=drawDoughnutManual([lvlR.h,lvlR.m,lvlR.l,lvlR.vl],['مرتفع','متوسط','منخفض','منخفض جداً'],['#28a745','#36a2eb','#ffce56','#dc3545'],'توزيع مستويات الأداء');
 
     // Trend chart
     var yrs=[...new Set(bd.map(function(r){return r['العام الدراسي - ميلادي']}))].filter(Boolean).sort();
