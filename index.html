@@ -369,17 +369,104 @@ function drawInteractive(f,bd){
 /* === ANALYSIS === */
 function analyze(f,subjs,tm,isM){
     var st=[],wk=[],rc=[];
+    var lvl=getLevels(f);
+    
     for(var i=0;i<subjs.length;i++){
         var s=subjs[i],sd=getSD(f,s,D.latestYear),t=tm[s];
-        if(sd.perf>=t)st.push(s+' حققت المستهدف بنسبة '+sd.perf.toFixed(1)+'%');
-        if(sd.perf>sd.dept)st.push(s+' تفوقت على متوسط الإدارة ('+sd.dept.toFixed(1)+'%)');
-        if(sd.perf<t){var g=(t-sd.perf).toFixed(1);wk.push(s+' أقل من المستهدف بـ '+g+'%');rc.push('تنفيذ برنامج تقوية في '+s)}
-        if(sd.perf<sd.dept)wk.push(s+' أقل من متوسط الإدارة');
+        var gap=sd.perf-t, deptGap=sd.perf-sd.dept, kingGap=sd.perf-sd.kingdom;
+        
+        // === نقاط القوة ===
+        if(sd.perf>=t) st.push(s+' حققت المستهدف بنسبة '+sd.perf.toFixed(1)+'% (المستهدف: '+t+'%)');
+        if(sd.perf>sd.dept) st.push(s+' تفوقت على متوسط الإدارة بـ '+deptGap.toFixed(1)+'% (الإدارة: '+sd.dept.toFixed(1)+'%)');
+        if(sd.perf>sd.kingdom) st.push(s+' تفوقت على متوسط المملكة بـ '+kingGap.toFixed(1)+'% (المملكة: '+sd.kingdom.toFixed(1)+'%)');
+        if(sd.perf>=70) st.push(s+' حققت مستوى أداء متميز ('+sd.perf.toFixed(1)+'%)');
+        
+        // تحسن عن السنة السابقة
+        if(D.previousYear){
+            var prev=getSD(f,s,D.previousYear);
+            if(prev.perf>0){
+                var ch=sd.perf-prev.perf;
+                if(ch>5) st.push(s+' تحسنت بشكل ملحوظ بـ +'+ch.toFixed(1)+'% مقارنة بالعام السابق');
+                else if(ch>0) st.push(s+' شهدت تحسناً طفيفاً بـ +'+ch.toFixed(1)+'% عن العام السابق');
+                if(ch<-5) wk.push(s+' تراجعت بشكل ملحوظ بـ '+ch.toFixed(1)+'% مقارنة بالعام السابق');
+                else if(ch<0) wk.push(s+' شهدت تراجعاً طفيفاً بـ '+ch.toFixed(1)+'% عن العام السابق');
+            }
+        }
+        
+        // === نقاط الضعف ===
+        if(sd.perf<t){
+            var g=(t-sd.perf).toFixed(1);
+            wk.push(s+' أقل من المستهدف بـ '+g+'% (الفعلي: '+sd.perf.toFixed(1)+'% / المستهدف: '+t+'%)');
+        }
+        if(sd.perf<sd.dept) wk.push(s+' أقل من متوسط الإدارة بـ '+Math.abs(deptGap).toFixed(1)+'%');
+        if(sd.perf<sd.kingdom) wk.push(s+' أقل من متوسط المملكة بـ '+Math.abs(kingGap).toFixed(1)+'%');
+        if(sd.perf<30) wk.push(s+' في مستوى أداء حرج ويحتاج تدخل عاجل ('+sd.perf.toFixed(1)+'%)');
+        
+        // === التوصيات حسب المادة ===
+        if(sd.perf<t){
+            if(s==='الرياضيات'){
+                rc.push('تكثيف استراتيجيات تدريس الرياضيات مثل: التعلم بالاكتشاف، حل المشكلات، والتعلم التعاوني');
+                rc.push('تنويع أساليب العرض في الرياضيات باستخدام الوسائل البصرية والتقنية والمحسوسات');
+                rc.push('تصميم تدريبات متدرجة الصعوبة في الرياضيات مع التركيز على المسائل التطبيقية');
+            }else if(s==='القراءة'){
+                rc.push('تعزيز مهارات القراءة من خلال برامج القراءة الموجهة والقراءة الحرة اليومية');
+                rc.push('تنويع استراتيجيات فهم المقروء مثل: التلخيص، والاستنتاج، والتحليل النقدي');
+                rc.push('إنشاء مكتبة صفية وتفعيل مسابقات القراءة لتحفيز الطلاب');
+            }else if(s==='العلوم'){
+                rc.push('تفعيل التجارب العملية والمختبرية في تدريس العلوم لتعزيز الفهم التطبيقي');
+                rc.push('استخدام استراتيجية الاستقصاء العلمي والتعلم القائم على المشاريع في العلوم');
+                rc.push('ربط مفاهيم العلوم بالحياة اليومية وتوظيف التقنية في العروض التوضيحية');
+            }
+        }
     }
-    var doms={};for(var i=0;i<f.length;i++){var r=f[i],d=r['المجال الفرعي'];if(d!==r['المجال'])doms[d]=r['نسبة المتقنين']||0}
-    var sorted=Object.entries(doms).sort(function(a,b){return b[1]-a[1]});
-    if(sorted.length>0&&!isM){st.push('أفضل مجال: '+sorted[0][0]+' ('+sorted[0][1]+'%)');var w=sorted[sorted.length-1];if(w[1]<50){wk.push('أضعف مجال: '+w[0]+' ('+w[1]+'%)');rc.push('التركيز على تحسين '+w[0])}}
-    if(!st.length)st.push('يوجد مجال للتحسين في جميع المواد');
+    
+    // تحليل المجالات الفرعية
+    var doms={};for(var i=0;i<f.length;i++){var r=f[i],d=r['المجال الفرعي'];if(d!==r['المجال']){if(!doms[d])doms[d]={vals:[],subj:r['المجال']};doms[d].vals.push(r['نسبة المتقنين']||0)}}
+    var domAvgs=Object.entries(doms).map(function(e){return{name:e[0],subj:e[1].subj,avg:avg(e[1].vals)}}).sort(function(a,b){return b.avg-a.avg});
+    
+    if(domAvgs.length>0&&!isM){
+        // أقوى المجالات
+        var topDoms=domAvgs.filter(function(d){return d.avg>=50});
+        if(topDoms.length>0) st.push('مجالات متميزة: '+topDoms.slice(0,3).map(function(d){return d.name+' ('+d.avg.toFixed(1)+'%)'}).join('، '));
+        
+        // أضعف المجالات
+        var weakDoms=domAvgs.filter(function(d){return d.avg<40}).sort(function(a,b){return a.avg-b.avg});
+        if(weakDoms.length>0){
+            wk.push('مجالات فرعية تحتاج تعزيز: '+weakDoms.slice(0,3).map(function(d){return d.name+' ('+d.avg.toFixed(1)+'%)'}).join('، '));
+            weakDoms.slice(0,2).forEach(function(d){
+                rc.push('تخصيص حصص إضافية لمعالجة الضعف في مجال «'+d.name+'» ضمن مادة '+d.subj);
+            });
+        }
+        
+        // فجوة كبيرة بين أقوى وأضعف مجال
+        if(domAvgs.length>=2){
+            var best=domAvgs[0],worst=domAvgs[domAvgs.length-1];
+            if(best.avg-worst.avg>30) wk.push('فجوة كبيرة ('+((best.avg-worst.avg).toFixed(1))+'%) بين أقوى مجال «'+best.name+'» وأضعف مجال «'+worst.name+'»');
+        }
+    }
+    
+    // تحليل مستويات الأداء
+    if(lvl.count>0){
+        if(lvl.vl>30) wk.push('نسبة مرتفعة من الطلاب في مستوى الأداء المنخفض جداً ('+lvl.vl.toFixed(1)+'%)');
+        if(lvl.vl+lvl.l>50) wk.push('أكثر من نصف الطلاب في مستويات الأداء المنخفضة ('+(lvl.vl+lvl.l).toFixed(1)+'%)');
+        if(lvl.h>30) st.push('نسبة جيدة من الطلاب في مستوى الأداء المرتفع ('+lvl.h.toFixed(1)+'%)');
+        if(lvl.h+lvl.m>60) st.push('أغلب الطلاب في مستويات أداء متوسطة ومرتفعة ('+(lvl.h+lvl.m).toFixed(1)+'%)');
+        
+        if(lvl.vl>20){
+            rc.push('تصميم برنامج علاجي مكثف للطلاب في مستوى الأداء المنخفض جداً ('+lvl.vl.toFixed(1)+'%)');
+            rc.push('تطبيق استراتيجية التعلم الفردي والمجموعات الصغيرة لمعالجة الفاقد التعليمي');
+        }
+    }
+    
+    // توصيات عامة دائمة
+    rc.push('تنويع استراتيجيات التدريس وتوظيف التعلم النشط والتعلم التعاوني والتعلم بالمشاريع');
+    rc.push('تفعيل التقويم التكويني المستمر لمتابعة تقدم الطلاب وتحديد نقاط الضعف مبكراً');
+    rc.push('عقد ورش عمل تدريبية للمعلمين حول أساليب التدريس الحديثة ومعايير نافس');
+    rc.push('إشراك أولياء الأمور في دعم العملية التعليمية من خلال التواصل المستمر وبرامج التوعية');
+    rc.push('تبادل الخبرات والممارسات المتميزة بين المعلمين داخل المدرسة ومع المدارس المتفوقة');
+    
+    if(!st.length) st.push('يوجد مجال واسع للتحسين في جميع المواد — يُنصح بوضع خطة تطوير شاملة');
+    
     return{strengths:st,weaknesses:wk,recommendations:rc};
 }
 
