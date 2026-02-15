@@ -444,83 +444,100 @@ async function generateReport(bd){
     document.getElementById('reportPreview').innerHTML=html;
 }
 
-/* === PDF EXPORT using html2canvas + jsPDF directly === */
+/* === PDF EXPORT - Section by section to prevent cutting === */
 async function exportPDF(){
     var el=document.getElementById('reportForPDF');
     if(!el){alert('⚠️ انتقل لتبويب "التقرير الشامل" أولاً ثم انتظر تحميل الرسومات');return}
 
-    // Show overlay
     var ov=document.createElement('div');
     ov.className='pdf-overlay';
-    ov.innerHTML='<div class="pdf-overlay-content"><h3>📄 جاري إنشاء PDF</h3><p>يرجى الانتظار قد يستغرق عدة ثوان...</p><div class="pdf-progress"><div class="pdf-progress-bar"></div></div></div>';
+    ov.innerHTML='<div class="pdf-overlay-content"><h3>📄 جاري إنشاء PDF</h3><p>يرجى الانتظار...</p><div class="pdf-progress"><div class="pdf-progress-bar"></div></div></div>';
     document.body.appendChild(ov);
 
     try{
-        // Wait for images to be fully loaded
+        // Wait for all images
         var imgs=el.querySelectorAll('img');
         await Promise.all(Array.from(imgs).map(function(img){
-            return new Promise(function(resolve){
-                if(img.complete)resolve();
-                else{img.onload=resolve;img.onerror=resolve}
-            });
+            return new Promise(function(r){if(img.complete)r();else{img.onload=r;img.onerror=r}});
         }));
 
-        // Use html2canvas to capture the entire report as one image
-        var canvas=await html2canvas(el,{
-            scale:2,
-            useCORS:true,
-            allowTaint:true,
-            backgroundColor:'#ffffff',
-            logging:false,
-            width:el.scrollWidth,
-            height:el.scrollHeight,
-            scrollX:0,
-            scrollY:0
-        });
-
-        var imgData=canvas.toDataURL('image/jpeg',0.95);
         var pdf=new jspdf.jsPDF('p','mm','a4');
-        var pageWidth=pdf.internal.pageSize.getWidth();
-        var pageHeight=pdf.internal.pageSize.getHeight();
+        var pw=pdf.internal.pageSize.getWidth();
+        var ph=pdf.internal.pageSize.getHeight();
         var margin=10;
-        var usableWidth=pageWidth-margin*2;
-        var usableHeight=pageHeight-margin*2;
+        var uw=pw-margin*2; // usable width
+        var uh=ph-margin*2; // usable height
+        var curY=margin;
 
-        // Calculate image dimensions to fit page width
-        var imgWidth=usableWidth;
-        var imgHeight=(canvas.height*imgWidth)/canvas.width;
+        // Helper: capture a DOM element to image and get its dimensions in mm
+        async function captureElement(elem){
+            var canvas=await html2canvas(elem,{
+                scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
+                logging:false,scrollX:0,scrollY:0
+            });
+            var imgData=canvas.toDataURL('image/jpeg',0.95);
+            var ratio=canvas.width/canvas.height;
+            var imgW=uw;
+            var imgH=imgW/ratio;
+            return{data:imgData,w:imgW,h:imgH};
+        }
 
-        // If image is taller than one page, split across pages
-        if(imgHeight<=usableHeight){
-            pdf.addImage(imgData,'JPEG',margin,margin,imgWidth,imgHeight);
-        }else{
-            var y=0;
-            var srcHeight=canvas.height;
-            var srcWidth=canvas.width;
-            var pageCanvasHeight=Math.floor((usableHeight/imgHeight)*srcHeight);
-            var pageNum=0;
-
-            while(y<srcHeight){
-                if(pageNum>0)pdf.addPage();
-                // Create a sub-canvas for this page slice
-                var sliceH=Math.min(pageCanvasHeight,srcHeight-y);
-                var pageCanvas=document.createElement('canvas');
-                pageCanvas.width=srcWidth;
-                pageCanvas.height=sliceH;
-                var ctx=pageCanvas.getContext('2d');
-                ctx.drawImage(canvas,0,y,srcWidth,sliceH,0,0,srcWidth,sliceH);
-                var sliceImg=pageCanvas.toDataURL('image/jpeg',0.95);
-                var sliceDisplayH=(sliceH*imgWidth)/srcWidth;
-                pdf.addImage(sliceImg,'JPEG',margin,margin,imgWidth,sliceDisplayH);
-                y+=pageCanvasHeight;
-                pageNum++;
+        // Helper: add image to PDF, handle page breaks
+        function addToPDF(imgObj){
+            if(curY+imgObj.h>ph-margin){
+                pdf.addPage();
+                curY=margin;
             }
+            pdf.addImage(imgObj.data,'JPEG',margin,curY,imgObj.w,imgObj.h);
+            curY+=imgObj.h+3;
+        }
+
+        // Get all report sections
+        var sections=el.querySelectorAll('.report-section');
+        
+        if(sections.length>0){
+            for(var i=0;i<sections.length;i++){
+                var sec=sections[i];
+                // Check if section has sub-elements that should be split further
+                var children=sec.children;
+                var hasLargeContent=sec.scrollHeight>800;
+                
+                if(hasLargeContent && children.length>1){
+                    // Capture each child separately to avoid large sections being cut
+                    for(var j=0;j<children.length;j++){
+                        var child=children[j];
+                        if(child.scrollHeight>10){
+                            var img=await captureElement(child);
+                            // If single child is too tall for one page, scale it down
+                            if(img.h>uh){
+                                var scale=uh/img.h;
+                                img.w*=scale;
+                                img.h=uh;
+                            }
+                            addToPDF(img);
+                        }
+                    }
+                }else{
+                    var img=await captureElement(sec);
+                    // If section is too tall, scale down
+                    if(img.h>uh){
+                        var scale=uh/img.h;
+                        img.w*=scale;
+                        img.h=uh;
+                    }
+                    addToPDF(img);
+                }
+            }
+        }else{
+            // Fallback: capture entire report
+            var img=await captureElement(el);
+            addToPDF(img);
         }
 
         pdf.save('تقرير_نافس.pdf');
     }catch(err){
         console.error('PDF Error:',err);
-        alert('❌ حدث خطأ: '+err.message+'\n\nجرّب استخدام زر الطباعة بدلاً من ذلك');
+        alert('❌ حدث خطأ: '+err.message);
     }finally{
         if(ov.parentNode)ov.parentNode.removeChild(ov);
     }
